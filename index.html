@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#efece3">
+  <title>AI-Slop — Twoje studio shortów</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" href="/assets/icons/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/styles/main.css">
+  <script src="/assets/scripts/app.js" defer></script>
+</head>
+<body>
+  <header class="header">
+    <a class="brand" href="/" aria-label="AI-Slop — strona główna"><img src="/assets/icons/mark.svg" width="32" height="32" alt="">AI-SLOP<span class="brand-dot">®</span></a>
+    <span class="header-note">MAŁY FORMAT. DUŻE POMYSŁY.</span>
+    <span class="edition"><span class="led"></span> CREATOR STUDIO / V.01</span>
+  </header>
+  <main class="layout">
+    <section class="intro" aria-labelledby="intro-title">
+      <p class="eyebrow"><span class="square"></span> OD POMYSŁU DO PIERWSZEJ KLATKI</p>
+      <h1 id="intro-title">Think big.<br>Make it <span class="highlight">short.</span><span class="cursor" aria-hidden="true">_</span></h1>
+      <p class="intro-copy">Twoje miejsce na kolejny dobry pomysł.<br>Twórz shorty. Buduj kanały. Nadaj im swój rytm.</p>
+      <div class="pixel-scene" aria-hidden="true">
+        <div class="scene-bar"><span>SHORT_FACTORY.EXE</span><span>− &nbsp; □ &nbsp; ×</span></div>
+        <div class="scene-body">
+          <span class="scene-label">IDEA → FRAME → PLAY</span>
+          <span class="spark spark-one">✦</span><span class="spark spark-two">+</span>
+          <div class="clip clip-back"><span class="clip-tag">00:15</span><div class="pixel-sun"></div><div class="mountain mountain-back"></div><div class="mountain"></div><span class="clip-caption">A NEW PERSPECTIVE</span></div>
+          <div class="clip clip-front"><span class="clip-tag">9:16</span><div class="pixel-bot"><i></i><i></i><b></b></div><div class="play-icon"></div><span class="clip-caption">YOUR NEXT BIG THING.</span></div>
+          <div class="scene-stamp">100%<br><strong>YOUR IDEA</strong></div>
+          <div class="timeline"><span></span><span></span><span></span><span></span><span></span><b>▶</b></div>
+        </div>
+        <div class="scene-footer"><span><i class="led"></i> CREATIVE MODE: ON</span><span>▰ ▰ ▰ ▰ ▱</span></div>
+      </div>
+      <div class="platforms"><span>MADE FOR THE SMALL SCREEN</span><div>↗ TikTok <span class="separator">/</span> YouTube Shorts</div></div>
+    </section>
+    <section class="access" aria-label="Dostęp do studia">
+      <div class="card">
+        <div class="card-top"><span id="step-label">SYSTEM / START</span><span class="card-squares" aria-hidden="true">▪ ▪ ▪</span></div>
+        <div class="card-content">
+          <div id="loading-view" role="status"><div class="pixel-key" aria-hidden="true">⌘</div><h2>Chwilka…</h2><p class="muted">Sprawdzamy, czy Twoje studio jest już gotowe.</p></div>
+          <div id="auth-view" hidden>
+            <div class="pixel-key" aria-hidden="true">↳</div>
+            <p class="eyebrow" id="form-kicker">TWÓJ NASTĘPNY KROK</p>
+            <h2 id="form-title">Witaj ponownie.</h2>
+            <p class="muted" id="form-description">Zaloguj się i wróć do swoich pomysłów.</p>
+            <div class="setup-note" id="setup-note" hidden><span aria-hidden="true">★</span><p>Nowe studio, czysta karta.<br>Pierwsze konto otrzyma rolę administratora.</p></div>
+            <form id="auth-form">
+              <fieldset id="form-fields">
+                <label for="email">ADRES E-MAIL <span>01</span></label>
+                <input id="email" name="email" type="email" autocomplete="username" placeholder="ty@twojestudio.pl" maxlength="254" required>
+                <label for="password">HASŁO <span>02</span></label>
+                <div class="password-input"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required aria-describedby="password-hint"><button id="toggle-password" type="button" aria-label="Pokaż hasło" aria-pressed="false">POKAŻ</button></div>
+                <p class="field-hint" id="password-hint">Twoje hasło do studia.</p>
+                <div id="confirm-field" hidden><label for="confirm-password">POWTÓRZ HASŁO <span>03</span></label><input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" maxlength="128" placeholder="Jeszcze raz, dla pewności"></div>
+                <button class="primary" id="submit-button" type="submit"><span id="submit-label">WEJDŹ DO STUDIA</span><span aria-hidden="true">↗</span></button>
+              </fieldset>
+            </form>
+            <p id="switch-line" class="switch-line"><span id="switch-copy">Nie masz jeszcze konta?</span> <a id="switch-link" href="/register">Załóż konto ↗</a></p>
+          </div>
+          <div id="account-view" hidden>
+            <div class="pixel-key" aria-hidden="true">✓</div><p class="eyebrow">POŁĄCZENIE NAWIĄZANE</p><h2>Jesteś w studiu.</h2><p class="muted">Twoje konto jest gotowe. Tutaj zaczyna się następny pomysł.</p>
+            <dl class="account-data"><dt>E-MAIL</dt><dd id="account-email"></dd><dt>ROLA W STUDIU</dt><dd><span id="account-role" class="role-badge"></span></dd></dl>
+            <p class="coming-soon">[ W PRZYGOTOWANIU ]<br>Generator filmów i zarządzanie kanałami pojawią się tutaj w kolejnym etapie.</p>
+            <button class="primary secondary" id="logout-button" type="button">WYLOGUJ SIĘ <span aria-hidden="true">↗</span></button>
+          </div>
+          <p id="message" class="message" role="status" aria-live="polite" hidden></p>
+          <button id="retry-button" class="retry" type="button" hidden>SPRÓBUJ PONOWNIE ↻</button>
+          <noscript><p class="message">Włącz JavaScript w przeglądarce, aby zarejestrować konto lub się zalogować.</p></noscript>
+        </div>
+        <div class="card-bottom"><span aria-hidden="true">▣</span> TWOJE STUDIO ZACZYNA SIĘ TUTAJ.</div>
+      </div>
+      <p class="card-caption"><span aria-hidden="true">+</span> LESS SCROLLING. MORE CREATING. <span aria-hidden="true">+</span></p>
+    </section>
+  </main>
+  <footer class="footer"><span>© AI-SLOP STUDIO</span><span>BUILT ONE PIXEL AT A TIME. <span class="footer-star" aria-hidden="true">✦</span></span><span>EST. 2026</span></footer>
+</body>
+</html>
