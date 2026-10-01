@@ -1,10 +1,21 @@
 {% extends "studio_base.html" %}
 {% block content %}
-<div class="page-heading"><h1>{{ {'costs':'Koszty kanału','budget':'Budżet filmu','jobs':'Zadania administratora','task':'Szczegóły zadania','revisions':'Rewizje filmu'}[view] }}</h1><a href="{{ request.url }}">Odśwież ↻</a></div>
+<div class="page-heading"><h1>{{ {'overview':'Podsumowanie kanału','costs':'Koszty kanału','budget':'Budżet filmu','jobs':'Zadania administratora','task':'Szczegóły zadania','revisions':'Rewizje filmu'}[view] }}</h1><a href="{{ request.url }}">Odśwież ↻</a></div>
 <p id="form-message" class="message" role="alert" tabindex="-1" {% if not message %}hidden{% endif %}>{{ message }}</p>
 {% if channel %}<p><a href="/channels/{{ channel.id }}">← {{ channel.name }}</a></p>{% endif %}
 {% if video %}<p><a href="/videos/{{ video.id }}">← {{ video.title }}</a></p>{% endif %}
-{% if view == 'costs' and data %}
+{% if view == 'overview' and data %}
+<nav class="channel-tabs" aria-label="Sekcje kanału"><a href="/channels/{{ channel.id }}">Ustawienia i strategia</a><a href="/channels/{{ channel.id }}/ideas">Pomysły</a><a href="/channels/{{ channel.id }}/videos">Filmy</a><a href="/channels/{{ channel.id }}/costs">Koszty</a></nav>
+<section class="panel"><h2>{{ channel.name }}</h2><p>Stan kanału: {{ channel.status }} · tryb: {{ channel.autopilot_mode }}</p><p>Ustawiona liczba filmów dziennie: {{ channel.videos_per_day }} · budżet na film: {{ channel.budget_per_video_usd }} USD</p></section>
+<section class="panel"><h2>Ostatni plan produkcji</h2>
+{% if data.latest_plan %}{% set plan = data.latest_plan %}<dl class="strategy"><dt>Dzień planu</dt><dd>{{ plan.day }}</dd><dt>Stan</dt><dd>{{ {'complete':'Planowanie zakończone','waiting_approval':'Oczekuje na zatwierdzenie pomysłów','waiting_task':'Oczekuje na zadania','blocked':'Zablokowany'}.get(plan.status,plan.status) }}</dd><dt>Cel planu</dt><dd>{{ plan.target }} filmów</dd>{% if plan.reason %}<dt>Powód</dt><dd>{{ {'blueprint_not_ready':'Strategia kanału wymaga przygotowania.', 'channel_task_pending':'Trwa analiza kanału lub generowanie pomysłów.', 'idea_generation_requires_review':'Generowanie pomysłów wymaga sprawdzenia.', 'daily_idea_batch_limit':'Osiągnięto dzienny limit generowania pomysłów.'}.get(plan.reason,plan.reason) }}</dd>{% endif %}</dl>
+{% if plan.status == 'waiting_approval' %}<p><a href="/channels/{{ channel.id }}/ideas?status=candidate">Przejrzyj pomysły do zatwierdzenia</a></p>{% endif %}
+<p>To ostatni zapisany plan, który może pochodzić z wcześniejszego dnia. Cel planu nie jest liczbą gotowych ani opublikowanych filmów.</p>
+{% else %}<p>Backend nie zapisał jeszcze planu dla tego kanału.</p>{% endif %}
+<p>Planowanie wykonuje scheduler backendu. Publikacja na platformach nie jest jeszcze dostępna.</p></section>
+{% for kind,title in [('ideas','Pomysły według statusu'),('videos','Filmy według statusu')] %}<section class="panel"><h2>{{ title }}</h2><ul class="status-list">{% for item in links[kind] %}<li><a href="{{ item.url }}">{{ item.status }}</a><strong>{{ item.count }}</strong></li>{% else %}<li>Brak danych w tej kategorii.</li>{% endfor %}</ul></section>{% endfor %}
+<section class="panel"><h2>Koszty całej historii</h2><p>{{ data.costs.effective_usd }} {{ data.costs.currency }}</p><p>Rozliczone koszty lub szacunki tam, gdzie rozliczenia jeszcze brak. Oczekujące rozliczenia: {{ data.costs.pending_actual_events }}.</p><a href="/channels/{{ channel.id }}/costs">Sprawdź zdarzenia kosztowe</a></section>
+{% elif view == 'costs' and data %}
 <section class="panel"><h2>Cała historia kanału</h2><p>Koszt łączny: {{ data.summary.effective_usd }} {{ data.summary.currency }}</p><p>Rzeczywisty: {{ data.summary.actual_usd }} · szacunki: {{ data.summary.estimated_usd }}</p><p>Oczekujące rozliczenia: {{ data.summary.pending_actual_events }}. Koszt łączny używa rozliczenia, a gdy go brak — szacunku. Nie jest sumą obu wartości.</p></section>
 {% for item in data.items %}<article class="panel"><h2>{{ item.operation }}</h2><p>{{ item.provider }} · {{ item.model }} · {{ item.created_at }}</p><p>Szacunek: {{ item.estimated_cost_usd }} USD · Rozliczenie: {% if item.actual_cost_usd is none %}oczekuje{% else %}{{ item.actual_cost_usd }} USD{% endif %}</p><a href="/videos/{{ item.video_id }}">Otwórz film</a></article>{% else %}<p>Brak zdarzeń kosztowych na tej stronie.</p>{% endfor %}
 {% elif view == 'budget' and data %}

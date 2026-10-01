@@ -173,3 +173,18 @@ uv run --no-active python tests/operations_smoke.py \
   --isolated-frontend-url http://127.0.0.1:13001 \
   --isolated-backend-url http://127.0.0.1:18091
 ```
+
+## Etap 7 — podsumowanie kanału
+
+W ustawieniach kanału wybierz **Podsumowanie**. Widok pokazuje liczby pomysłów
+oraz filmów według statusu, koszty i ostatni plan produkcji. Statusy prowadzą
+do filtrowanych list. Data planu może być historyczna; jego zakończenie nie
+potwierdza wyrenderowania ani publikacji filmów.
+
+Test na izolowanej instancji:
+
+```bash
+uv run --no-active python tests/overview_smoke.py \
+  --isolated-frontend-url http://127.0.0.1:13001 \
+  --isolated-backend-url http://127.0.0.1:18091
+```

@@ -48,6 +48,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 4. [x] Konkurenci i pomysły.
 5. [x] Filmy, sceny, produkcja i podgląd zasobów.
 6. [x] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
+7. [x] Podsumowanie kanału i podgląd ostatniego planu produkcji.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -274,3 +275,28 @@ zachowanie wersji 1, anulowanie szkicu wersji 3. Odtwarzanie i Range nadal dzia�
 Obejrzano screenshot mobilny WebKit; brak overflow przy 390 px.
 Odzyskiwanie niepewnych zadań sprawdzono przez mock HTTP, nie przez żywego
 płatnego providera. Smoke nie sprawdza Redis/Dramatiq ani PostgreSQL.
+
+## Etap 7 — podsumowanie kanału i plan produkcji (zakończony)
+
+Po ukończeniu sześciu etapów podstawowych uzupełniono istniejący, dotąd niewykorzystany
+GET /api/v1/channels/{id}/overview. Sprawdzono schemas Overview/PlanRead,
+service.overview, scheduler/service.py i testy panelu dotyczące auth oraz własności.
+
+Nowy /channels/{id}/overview jest dostępny z ustawień kanału. Pokazuje konfigurację,
+liczniki pomysłów i filmów z linkami do filtrowanych list, koszty całej historii
+oraz ostatni zapisany plan: dzień, status, cel i powód blokady. Znane stany i powody
+mają polskie opisy; nieznane wartości pozostają widoczne. waiting_approval prowadzi
+do kandydatów. complete oznacza ukończenie planowania, nie render ani publikację.
+Data planu jest pokazywana bez założenia, że dotyczy dzisiejszego dnia.
+
+Frontend używa wyłącznie API, waliduje odpowiedź przez Pydantic. Ekran jest
+SSR, działa bez JS i ma ręczne odświeżenie. Nie dopisano lokalnego schedulera,
+kalendarza ani przycisków mutacji, dla których brak kontraktu API.
+
+Walidacja: 102 testy, Ruff i format-check. Nowe regresje obejmują pusty plan,
+statusy znane/nieznane, starszy dzień, escapowanie tekstu, kodowanie filtrów,
+401/403/404/503 i niepoprawną odpowiedź backendu. Smoke przeciw prawdziwemu API
+na izolowanym SQLite potwierdził OpenAPI, nawigację, pusty plan i koszty w Chromium
+oraz WebKit z wyłączonym JS. Obejrzano screenshot mobilny, brak overflow 390 px.
+Smoke nie uruchamia schedulera ani nie sprawdza jego dostarczania zadań;
+niepuste plany sprawdzono deterministycznie z mock HTTP.
