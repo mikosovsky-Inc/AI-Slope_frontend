@@ -1,6 +1,7 @@
 """Read-only HTTP response projections; domain enums remain backend-owned."""
 
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
@@ -36,6 +37,7 @@ class Dashboard(BaseModel):
 
 
 class Channel(BaseModel):
+    id: UUID
     name: str
     idea: str
     status: str

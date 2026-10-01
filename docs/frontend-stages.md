@@ -44,7 +44,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 
 1. [x] Fundament SSR, BackendClient, auth, błędy, testy.
 2. [x] Dashboard i lista kanałów z rzeczywistych endpointów.
-3. [ ] Onboarding kanału i setup/strategy, polling analizy.
+3. [x] Onboarding kanału i setup/strategy, polling analizy.
 4. [ ] Konkurenci i pomysły.
 5. [ ] Filmy, sceny, produkcja i podgląd zasobów.
 6. [ ] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
@@ -91,3 +91,47 @@ na izolowanej bazie SQLite: 13 kanałów, strony 12+1, dashboard, nawigacja,
 wylogowanie, Chromium i WebKit, brak overflow na 390 px. Obejrzano zrzuty ekranów.
 Backend produkcyjny i jego dane nie były modyfikowane.
 Następny etap: onboarding kanału i konfiguracja/strategia wraz z pollingiem analizy.
+
+
+## Etap 3 — onboarding, ustawienia i analiza kanału (zakończony)
+
+Przeczytano aktualne ChannelCreate/Update/Detail, TaskRead, serwisy kanałów,
+intelligence, enqueue/read_task oraz testy channels/intelligence/tasks.
+Backend na :8000 nie działał podczas tego etapu; użyto OpenAPI prawdziwego,
+izolowanego backendu :18091. Frontend nadal komunikuje się wyłącznie przez HTTP.
+
+Dodano /channels/new i /channels/{id}: utworzenie z opisu (nazwa opcjonalna),
+język, częstotliwość, budżet i tryb pracy. Zapis ustawień wysyła tylko te pola;
+nie zastępuje blueprintu ani filarów tematycznych. Języki i tryby pochodzą
+z OpenAPI. Nie dodano własnych domenowych enumów ani parsowania opisu na ustawienia.
+Błędy zapisu zachowują wpisane wartości. Formularze działają bez JS.
+
+Strategia jest podglądem wyniku analizy: nisza, odbiorcy, ton, hook, formaty,
+długość/tempo, styl wizualny, słowa kluczowe, sugerowany rytm i filary.
+Ręczny edytor pełnego blueprintu nie jest częścią tego etapu. Analiza zastępuje
+strategię, ale nie stosuje sugerowanej częstotliwości do ustawień kanału.
+Przyciski aktywacji/wstrzymania wywołują odpowiednie endpointy backendu.
+
+Analiza obsługuje odpowiedź synchroniczną ChannelDetail oraz asynchroniczną
+TaskRead. POST używa Idempotency-Key z formularza (ponowienie tej samej próby
+zachowuje klucz). To nie oznacza globalnej deduplikacji analiz otwartych w różnych
+kartach. Utworzenie kanału nie ma backendowej idempotencji, dlatego błędy sieci
+nie powodują automatycznego ponowienia POST.
+
+URL szczegółów zawiera task_id z odpowiedzi backendu; polling GET przez frontend
+co 5 sekund, bez nakładania żądań, pauza w niewidocznej karcie, limit 120 odczytów.
+Sukces/błąd kończy polling i odświeża widok. 401 prowadzi do logowania;
+błąd sieci kończy automatyczne odświeżanie z czytelnym komunikatem.
+Bez JS dostępne jest ręczne odświeżenie. Luka w historii zadań jest opisana
+w backend-requirements.md. Status zadania jest prezentowany bez procentów postępu,
+których API nie dostarcza.
+
+Walidacja: 41 testów, Ruff, diff-check. Chromium i WebKit: tworzenie kanału,
+zapis częstotliwości, zadanie analizy wykonane przez prawdziwy runner z mock LLM,
+podgląd strategii, zachowanie ustawień, activate/pause, brak overflow przy 390 px.
+Test korzysta z izolowanej bazy SQLite; testowy mechanizm uruchamia runner przy
+odczycie zadania — nie sprawdza dostarczania z Redis/Dramatiq. Obejrzano zrzuty.
+Następny etap: konkurenci i pomysły.
+
+Test bez JS wykrył wyścig między odczytem kanału a końcem zadania.
+Poprawiono kolejność odczytów: status zadania, potem strategia. Dodano regresję.

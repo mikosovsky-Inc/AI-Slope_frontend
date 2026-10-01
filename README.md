@@ -60,8 +60,7 @@ Braki API: [docs/backend-requirements.md](docs/backend-requirements.md).
 
 Po zalogowaniu `/app` pokazuje liczniki, koszty całej historii, statusy i ostatnie
 filmy. `/channels` prezentuje kanały po 12 na stronę. Obie strony pobierają dane
-użytkownika z backendu; są dostępne bez JavaScript. Tworzenie i konfiguracja kanału
-należą do kolejnego etapu. Aktualnie nie ma przycisków do tych operacji.
+użytkownika z backendu; są dostępne bez JavaScript. Tworzenie i konfiguracja kanału są dostępne od etapu 3.
 
 Dodatkowy test integracyjny tworzy 13 kanałów w **izolowanym** backendzie:
 
@@ -74,3 +73,27 @@ uv run --no-active python tests/panel_smoke.py \
 
 Frontend testowy musi wskazywać ten sam backend. Test sprawdza paginację,
 dashboard, mobilny układ i wylogowanie w Chromium oraz WebKit (bez JavaScript).
+
+
+## Etap 3 — utworzenie kanału i strategia
+
+Kliknij **Utwórz kanał**, wpisz opis i język. Nazwa jest opcjonalna; backend nada
+ją z opisu. Częstotliwość, budżet i tryb pracy są pod rozwijanymi ustawieniami.
+Po zapisie otwórz **Analizuj opis kanału**. Wynik obejmuje m.in. odbiorców,
+formaty i filary tematyczne. Ponowna analiza zastępuje strategię.
+
+Analiza asynchroniczna wymaga działających backendowych workerów. Frontend
+odświeża jej stan; bez JavaScript użyj **Odśwież stan**. Zachowaj URL z task_id,
+żeby wrócić do śledzenia tej próby. W razie błędu automatyczny polling zatrzymuje się.
+Języki i tryby pracy pobierane są z /openapi.json backendu, który musi być dostępny
+z serwera frontendu. Przy mock LLM strategia jest przykładową odpowiedzią backendu.
+
+Test przeglądarkowy (wyłącznie izolowany stack, mock provider i działający worker):
+
+```sh
+uv run --no-active python tests/channel_smoke.py \
+  --isolated-frontend-url http://localhost:13001 \
+  --isolated-backend-url http://localhost:18091
+```
+
+Sprawdza Chromium z pollingiem i WebKit bez JS z ręcznym odświeżeniem.

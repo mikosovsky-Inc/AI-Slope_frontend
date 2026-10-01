@@ -31,3 +31,22 @@ Frontend nie będzie przechowywać tokenów platform ani wykonywać tej logiki.
 Brak blokujących braków: GET /api/v1/dashboard i GET /api/v1/channels obsługują
 podsumowanie i paginację. Nie dodano filtrowania kanałów ani statystyk miesięcznych,
 ponieważ te endpointy ich nie udostępniają. W tym etapie nie są wymagane.
+
+
+## Etap 3: wznowienie śledzenia analizy po opuszczeniu strony
+
+Brak listy zadań kanału. Obecny GET /api/v1/tasks/{task_id} działa, kiedy frontend
+zna task_id otrzymany przy zleceniu. Frontend zachowuje go w URL. Po wejściu na
+kanał z listy nie odtwarza bieżącej analizy ani historii. TaskRead nie zawiera
+channel_id, więc sam odczyt zadania potwierdza właściciela, ale nie powiązanie
+z aktualnie oglądanym kanałem. Nie udajemy globalnej blokady równoległej analizy.
+
+Minimalna propozycja:
+- GET /api/v1/channels/{channel_id}/tasks
+- Request: query kind (opcjonalny), limit, offset; bez body.
+- Response: items (TaskRead uzupełniony o channel_id), total, limit, offset.
+- UX: odtworzenie aktywnej analizy po powrocie i pokazanie jej historii.
+- Backend: własność kanału, filtr i stabilne sortowanie po created_at/id.
+
+To propozycja API, nie zaimplementowany endpoint. Bezpośredni dostęp do DB
+lub odgadywanie task_id nie jest rozwiązaniem używanym przez frontend.

@@ -21,6 +21,7 @@ for (const form of document.querySelectorAll("form[method=post]")) {
   const submit = form.querySelector("button[type=submit]");
   if (!submit) continue;
   const label = submit.textContent;
+  const initiallyDisabled = submit.disabled;
   // Invalid events do not bubble. Show a persistent explanation in addition
   // to the browser tooltip, including when autofill leaves a field empty.
   form.addEventListener("invalid", (event) => {
@@ -41,7 +42,7 @@ for (const form of document.querySelectorAll("form[method=post]")) {
   });
   window.addEventListener("pageshow", () => {
     form.removeAttribute("aria-busy");
-    submit.disabled = false;
+    submit.disabled = initiallyDisabled;
     submit.textContent = label;
   });
 }

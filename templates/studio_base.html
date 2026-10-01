@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ 'Kanały' if section == 'channels' else 'Studio' }} — AI-Slop</title>
+  <link rel="icon" href="/assets/icons/mark.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/assets/styles/main.css">
+  <link rel="stylesheet" href="/assets/styles/studio.css">
+  <script src="/assets/scripts/app.js?v=ssr-auth-3" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#content">Przejdź do treści</a>
+<header class="header">
+  <a class="brand" href="/app"><img src="/assets/icons/mark.svg" width="32" height="32" alt="">AI-SLOP</a>
+  <span class="edition">CREATOR STUDIO / V.02</span>
+</header>
+<div class="studio-layout">
+  <aside class="sidebar">
+    <p class="eyebrow">TWOJE STUDIO</p>
+    <nav aria-label="Menu główne">
+      <a href="/app" {% if section == 'dashboard' %}aria-current="page"{% endif %}>▣ &nbsp; Studio</a>
+      <a href="/channels" {% if section == 'channels' %}aria-current="page"{% endif %}>▤ &nbsp; Kanały</a>
+    </nav>
+    {% if user %}<dl class="account-data"><dt>KONTO</dt><dd>{{ user.email }}</dd><dt>ROLA</dt><dd>{{ user.role }}</dd></dl>{% endif %}
+    <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="primary secondary" type="submit">WYLOGUJ SIĘ</button></form>
+  </aside>
+  <main id="content" class="studio-content" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<footer class="footer"><span>AI-SLOP STUDIO</span><span>BUILT ONE PIXEL AT A TIME.</span></footer>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{% extends "studio_base.html" %}
+{% block content %}
+<a href="/channels">← Wszystkie kanały</a>
+<div class="page-heading"><h1>{{ 'Nowy kanał.' if creating else (channel.name if channel else 'Kanał') }}</h1></div>
+<p id="form-message" class="message" role="alert" tabindex="-1" {% if not message %}hidden{% endif %}>{{ message }}</p>
+{% if not choices and not channel %}<a href="{{ request.url.path }}">Spróbuj ponownie ↻</a>{% endif %}
+{% if task %}
+<section class="panel" id="analysis-task" data-status-url="/task-status/{{ task.id }}" data-status="{{ task.status }}">
+<h2>Analiza kanału</h2><p role="status" id="task-message">Stan zadania: {{ task.status }}</p>
+{% if task.status == 'succeeded' %}<p>Analiza zakończona. Strategia znajduje się poniżej.</p>
+{% elif task.status in ['failed', 'needs_review'] %}<p>Analiza nie zakończyła się powodzeniem. Sprawdź opis i spróbuj ponownie.</p>
+{% else %}<p>Możesz pozostawić tę stronę otwartą. Stan będzie odświeżany automatycznie.</p>{% endif %}
+<a href="{{ request.url }}">Odśwież stan ↻</a><noscript><p>JavaScript jest wyłączony. Użyj odświeżenia, żeby sprawdzić wynik.</p></noscript>
+</section>
+<script src="/assets/scripts/channel.js?v=1" defer></script>
+{% endif %}
+{% if choices %}
+<section class="panel"><h2>{{ 'Opisz swój pomysł' if creating else 'Ustawienia kanału' }}</h2>
+<p>Na przykład: „Polski kanał o dziwnych ciekawostkach historycznych, z filmami około 45 sekund”. Po zapisaniu możesz uruchomić analizę, która zaproponuje strategię.</p>
+<form method="post" action="{{ '/channels/new' if creating else '/channels/' ~ channel.id ~ '/settings' }}">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<label for="idea">O CZYM MA BYĆ KANAŁ?</label><textarea id="idea" name="idea" minlength="10" maxlength="4000" rows="5" required>{{ values.get('idea', '') }}</textarea>
+<label for="name">NAZWA {{ '(OPCJONALNIE)' if creating else '' }}</label><input id="name" name="name" maxlength="120" value="{{ values.get('name', '') }}" {% if not creating %}required{% endif %}>
+<label for="language">JĘZYK</label><select id="language" name="language">{% for value in choices.languages %}<option value="{{ value }}" {% if values.get('language') == value %}selected{% endif %}>{{ {'pl':'Polski','en':'Angielski'}.get(value,value) }}</option>{% endfor %}</select>
+<details {% if not creating %}open{% endif %}><summary>Częstotliwość, budżet i tryb pracy</summary>
+<label for="videos_per_day">FILMY DZIENNIE</label><input id="videos_per_day" name="videos_per_day" type="number" min="1" max="24" step="1" required value="{{ values.get('videos_per_day', 2) }}">
+<label for="budget">BUDŻET NA FILM (USD)</label><input id="budget" name="budget_per_video_usd" type="number" min="0.0001" max="100" step="0.0001" required value="{{ values.get('budget_per_video_usd', '0.20') }}">
+<label for="mode">TRYB PRACY</label><select id="mode" name="autopilot_mode">{% for value in choices.modes %}<option value="{{ value }}" {% if values.get('autopilot_mode') == value %}selected{% endif %}>{{ {'manual':'Ręczny','semi_auto':'Półautomatyczny'}.get(value,value) }}</option>{% endfor %}</select>
+<p>Tryb półautomatyczny dotyczy planowania produkcji. Publikacja na TikToku i YouTube nie jest jeszcze dostępna.</p></details>
+<button type="submit" class="primary">{{ 'UTWÓRZ KANAŁ' if creating else 'ZAPISZ USTAWIENIA' }}</button>
+</form></section>
+{% endif %}
+{% if channel %}
+<section class="panel"><h2>Strategia kanału</h2>
+<p>Analiza zapisze nową strategię, zastępując poprzednią. Nie zmieni automatycznie liczby filmów dziennie w ustawieniach. Zapisz zmiany opisu przed uruchomieniem analizy.</p>
+<form method="post" action="/channels/{{ channel.id }}/analyze"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="key" value="{{ key }}"><button type="submit" class="primary" {% if task and task.status in ['queued', 'running'] %}disabled{% endif %}>ANALIZUJ OPIS KANAŁU</button></form>
+{% set config = channel.blueprint.configuration %}
+{% if config.niche_description %}
+<dl class="strategy"><dt>Nisza</dt><dd>{{ config.niche_description }}</dd><dt>Odbiorcy</dt><dd>{{ config.target_audience }}</dd><dt>Ton</dt><dd>{{ config.tone }}</dd><dt>Początek filmu</dt><dd>{{ config.hook_style }}</dd><dt>Formaty</dt><dd>TOP5: {{ config.formats.top5 }} · STORY: {{ config.formats.story }}</dd><dt>Długość i tempo</dt><dd>{{ config.video_style.duration_target }} s · {{ config.video_style.pace }} · początek do {{ config.video_style.hook_max_seconds }} s</dd><dt>Styl wizualny</dt><dd>{{ config.visual_style.description }} · udział scen wideo: {{ config.visual_style.video_scene_ratio }}</dd><dt>Słowa kluczowe</dt><dd>{{ config.seed_keywords|join(', ') }}</dd>
+{% if config.suggested_posting_strategy %}<dt>Proponowana częstotliwość</dt><dd>{{ config.suggested_posting_strategy.videos_per_day }} filmów dziennie. {{ config.suggested_posting_strategy.rationale }}</dd>{% endif %}</dl>
+<h3>Filary tematyczne</h3><ul>{% for pillar in channel.blueprint.content_pillars %}<li><strong>{{ pillar.name }}</strong><p>{{ pillar.description }}</p></li>{% endfor %}</ul>
+{% else %}<p>Nie masz jeszcze strategii. Uruchom analizę opisu kanału.</p>{% endif %}
+</section>
+<section class="panel"><h2>Stan kanału: {{ channel.status }}</h2><p>Aktywacja umożliwia schedulerowi planowanie zgodnie z ustawieniami kanału. Wstrzymanie kanału nie anuluje już uruchomionych zadań.</p>
+<div class="channel-actions">{% for action, label in [('activate','AKTYWUJ'),('pause','WSTRZYMAJ')] %}<form method="post" action="/channels/{{ channel.id }}/{{ action }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="primary secondary" type="submit">{{ label }}</button></form>{% endfor %}</div></section>
+{% endif %}
+{% endblock %}

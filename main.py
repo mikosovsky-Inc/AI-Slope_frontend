@@ -1,33 +1,19 @@
 import secrets
 from contextlib import asynccontextmanager
-from functools import lru_cache
-from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import AnyHttpUrl
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.api.client import BackendClient, BackendError
 from app.api.panel import ChannelPage, Dashboard, User, read
+from app.config import ROOT, Settings, get_settings  # noqa: F401
+from app.pages.channels import router as channel_pages
 
-ROOT = Path(__file__).resolve().parent
 SESSION = "ai_slop_session"
 CSRF = "ai_slop_csrf"
-
-
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore")
-    api_base_url: AnyHttpUrl = "http://localhost:8000"
-    cookie_secure: bool = False
-
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
 
 
 @asynccontextmanager
@@ -44,6 +30,8 @@ app = FastAPI(
 )
 app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")
 templates = Jinja2Templates(directory=ROOT / "templates")
+app.state.templates = templates
+app.include_router(channel_pages)
 
 
 def cookie(response, name, value, max_age=None):
@@ -59,7 +47,7 @@ def cookie(response, name, value, max_age=None):
 
 
 def render(request, *, mode="login", user=None, first=False, message="", status=200):
-    csrf = secrets.token_urlsafe(32)
+    csrf = request.cookies.get(CSRF) or secrets.token_urlsafe(32)
     response = templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -153,7 +141,7 @@ async def studio(request: Request, offset: int = Query(default=0, ge=0)):
             if status == 403
             else "Nie udało się pobrać danych studia. Spróbuj ponownie."
         )
-    csrf = secrets.token_urlsafe(32)
+    csrf = request.cookies.get(CSRF) or secrets.token_urlsafe(32)
     response = templates.TemplateResponse(
         request=request,
         name="studio.html",
