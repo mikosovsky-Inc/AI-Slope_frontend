@@ -1,7 +1,18 @@
 "use strict";
 const panel = document.getElementById("video-state");
 if (panel) {
-  const initial = JSON.parse(panel.dataset.state);
+  const message = document.getElementById("poll-message");
+  const stopped = "Automatyczne odświeżanie zatrzymane. Odśwież stronę, aby sprawdzić wynik.";
+  function valid(state) {
+    return state && typeof state.status === "string" && state.status.length > 0
+      && typeof state.updated_at === "string"
+      && typeof state.has_active_tasks === "boolean" && Array.isArray(state.tasks)
+      && state.tasks.every(task => task && typeof task.id === "string"
+        && typeof task.kind === "string" && typeof task.status === "string"
+        && Number.isInteger(task.attempts));
+  }
+  let initial;
+  try { initial = JSON.parse(panel.dataset.state); } catch { initial = null; }
   let dirty = false;
   let attempts = 0;
   const markDirty = event => {
@@ -16,6 +27,7 @@ if (panel) {
       if (response.status === 401) { location.assign("/login"); return; }
       if (!response.ok) throw new Error();
       const state = await response.json();
+      if (!valid(state)) throw new Error();
       if (JSON.stringify(state) !== JSON.stringify(initial)) {
         if (!dirty) { location.reload(); return; }
         document.getElementById("poll-message").textContent = "Stan filmu zmienił się. Masz niezapisane zmiany — odśwież stronę po ich zachowaniu.";
@@ -24,7 +36,8 @@ if (panel) {
       if (++attempts < 120 && state.has_active_tasks) { setTimeout(pollVideo, 5000); return; }
       if (!state.has_active_tasks) return;
     } catch { /* Manual refresh remains available. */ }
-    document.getElementById("poll-message").textContent = "Automatyczne odświeżanie zatrzymane. Odśwież stronę, aby sprawdzić wynik.";
+    message.textContent = stopped;
   }
-  if (initial.has_active_tasks) setTimeout(pollVideo, 3000);
+  if (!valid(initial)) message.textContent = stopped;
+  else if (initial.has_active_tasks) setTimeout(pollVideo, 3000);
 }

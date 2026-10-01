@@ -62,4 +62,6 @@ jobs:
         run: uv run --no-sync playwright install --with-deps chromium webkit
 
       - name: Test polling in both browsers with mocked HTTP
-        run: uv run --no-sync python tests/polling_smoke.py
+        run: |
+          uv run --no-sync python tests/polling_smoke.py
+          uv run --no-sync python tests/video_polling_smoke.py

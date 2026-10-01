@@ -54,6 +54,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 10. [x] Plan wizualny filmu.
 11. [x] Niezawodność pollingu i ochrona niezapisanych formularzy.
 12. [x] GitHub Actions frontendu: Python, Ruff i testy przeglądarkowe.
+13. [x] Walidacja i regresje odświeżania filmu.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -440,3 +441,25 @@ Nie uruchomiono workflow na runnerze GitHub/Ubuntu ani nie zmieniano branch
 protection; pierwszy zdalny przebieg nastąpi po pushu. Dotychczasowe integracje
 z izolowanym backendem nie zostały włączone do tego workflow. Zmiana nie wymaga
 nowego smoke obu serwisów ani inspekcji niezmienionych widoków.
+
+## Etap 13 — niezawodność pollingu filmu (zakończony)
+
+Po włączeniu CI dla kanałów brakowało niezależnych regresji video.js. Sprawdzono
+StatusRead backendu, projekcję Status frontendu, /video-status i istniejącą ochronę
+edycji. Wadliwy payload był wcześniej porównywany jako zmiana stanu i mógł
+wywołać reload. Dodano kontrolę struktury przed porównaniem, bez kopii enumów
+ani nowych przejść stanów. Niepoprawny początkowy JSON także pokazuje komunikat
+zamiast nieobsłużonego wyjątku. Skrypt otrzymał wersję URL v=3.
+
+Dodano tests/video_polling_smoke.py i wykonanie w istniejącym jobie przeglądarek
+GitHub Actions. Testuje oba silniki: czysty i edytowany formularz, select/change,
+niepoprawny payload, 401/503, idle, kolejne odczyty i uszkodzony stan początkowy.
+Zegar testowy czeka na zaplanowanie kolejnego pollingu po asynchronicznym fetch.
+Nie dodano nowego API, zmian backendu ani zależności.
+
+Walidacja: 132 testy Pythona, Ruff, format-check i diff-check. Dziewięć scenariuszy
+regresji video pollingu przeszło w Chromium i WebKit. Integracja rzeczywistego API
+na izolowanym SQLite/storage z mock providerami i FFmpeg: produkcja STORY do READY,
+odtwarzanie w obu przeglądarkach, Range 206 i brak overflow mobilnego. Test nie
+pokrywa Redis/Dramatiq ani płatnych providerów. Rozszerzony workflow zweryfikowano
+lokalnie; nie uruchamiano GitHub Actions zdalnie.

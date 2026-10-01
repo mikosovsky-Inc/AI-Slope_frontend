@@ -268,3 +268,19 @@ To CI frontendu, nie pełny test obu serwisów. Testy `*_smoke.py` wymagające
 izolowanego backendu pozostają uruchamiane osobno zgodnie z instrukcjami powyżej.
 Konfiguracja zacznie działać po wysłaniu jej do repozytorium GitHub. Wymaganie
 zielonych kontroli przed scaleniem ustawia się w regułach gałęzi na GitHubie.
+
+## Etap 13 — regresje odświeżania filmu
+
+Polling filmu sprawdza strukturę odpowiedzi przed przeładowaniem strony.
+Uszkodzony stan początkowy lub niepoprawna odpowiedź zatrzymuje odpytywanie
+z komunikatem; nadal można odświeżyć ręcznie. Nie zmienia to statusów domenowych.
+
+CI uruchamia również:
+
+```bash
+uv run --no-active python tests/video_polling_smoke.py
+```
+
+Test w Chromium/WebKit obejmuje niezapisane sceny (input/change), odświeżenie
+bez edycji, kolejne odczyty aktywnego filmu, brak odpytywania przy braku aktywnych
+zadań, błędne dane, 401 i awarię API. Nie wymaga backendu ani sekretów.
