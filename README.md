@@ -236,3 +236,18 @@ uv run --no-active python tests/direction_smoke.py \
   --isolated-frontend-url http://127.0.0.1:13001 \
   --isolated-backend-url http://127.0.0.1:18091
 ```
+
+## Etap 11 — odświeżanie i niezapisane formularze
+
+Zakończenie zadania nie przeładowuje automatycznie strony, jeśli zmieniono pola
+formularza. Komunikat informuje o nowych danych — najpierw zapisz edycję, potem
+odśwież stronę. Ochrona dotyczy zdarzeń input i change, także zmian selektorów.
+Nie jest to zapis roboczy: ręczne odświeżenie lub zamknięcie karty nadal usuwa
+niezapisane dane. Niepoprawne/nieznane odpowiedzi zatrzymują polling zadania
+z komunikatem; nie powodują pętli przeładowań.
+
+Deterministyczny test w Chromium i WebKit (bez backendu i kont użytkowników):
+
+```bash
+uv run --no-active python tests/polling_smoke.py
+```

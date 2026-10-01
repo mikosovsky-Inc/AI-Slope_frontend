@@ -4,7 +4,11 @@ if (panel) {
   const initial = JSON.parse(panel.dataset.state);
   let dirty = false;
   let attempts = 0;
-  document.addEventListener("input", () => { dirty = true; });
+  const markDirty = event => {
+    if (event.target.closest("form")) dirty = true;
+  };
+  document.addEventListener("input", markDirty);
+  document.addEventListener("change", markDirty);
   async function pollVideo() {
     if (document.hidden) { setTimeout(pollVideo, 5000); return; }
     try {

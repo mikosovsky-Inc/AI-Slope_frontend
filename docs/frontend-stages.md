@@ -52,6 +52,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 8. [x] Historia kontroli jakości filmu.
 9. [x] Źródła, fakty i cytowania TOP5.
 10. [x] Plan wizualny filmu.
+11. [x] Niezawodność pollingu i ochrona niezapisanych formularzy.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -390,3 +391,30 @@ oraz FFmpeg. Film osiągnął READY. Chromium i WebKit potwierdziły kwoty i lic
 scen z API, nawigację, rozwijanie szczegółów, odtwarzanie i Range. Obejrzano
 mobilny screenshot WebKit; brak overflow przy 390 px. Nie testowano płatnych
 providerów ani dostarczania zadań przez Redis/Dramatiq.
+
+## Etap 11 — niezawodność odświeżania (zakończony)
+
+Audyt wykazał brak ochrony edycji w channel.js: zakończona analiza przeładowywała
+ustawienia kanału, niezależnie od wpisanych danych. Sprawdzono GET tasks/{id},
+TaskRead/TaskStatus, frontendowy task-status, oba skrypty pollingowe i formularze
+kanałów/pomysłów. Nie wymaga to nowego kontraktu ani zmian backendu.
+
+Polling zadania reaguje na input/change w formularzach. Po zakończeniu zadania
+nie przeładowuje zmienionego formularza; pokazuje komunikat i kończy odpytywanie.
+Bez edycji zachowuje dotychczasowy reload. Film także obsługuje change, wcześniej
+śledził tylko input. Nie zapisujemy pól w przeglądarce i nie blokujemy ręcznej
+nawigacji. Flaga edycji jest ostrożna: cofnięcie wpisu nie zeruje jej.
+
+/task-status waliduje projekcję odpowiedzi przez Pydantic StrictStr/min_length.
+Niepoprawny status zwraca bezpieczny 502 zamiast błędu indeksowania lub pozornego
+zakończenia. Nieznany status zatrzymuje polling z komunikatem, bez reloadu.
+Zachowano pauzę w ukrytej karcie, limit prób, timeout oraz przekierowanie po 401.
+Podniesiono wersje URL skryptów do v=2. Bez JavaScript nadal działa ręczne odświeżenie.
+
+Walidacja: 132 testy Pythona, Ruff, format-check i diff-check. Deterministyczny
+Playwright w Chromium/WebKit: input, change, czysty formularz, niepoprawny JSON
+statusu, nieznany status, 401 i błąd serwera, bez błędów JS. Poprawiono kodowanie
+UTF-8 strony fixture po pierwszej próbie testu. Integracja na prawdziwym API
+z izolowanym SQLite i mock LLM potwierdziła tworzenie kanału, zapis, analizę
+asynchroniczną, strategię, activate/pause oraz mobilny widok. Obejrzano screenshot.
+Harness wykonuje runner przy odczycie zadania; nie testuje Redis/Dramatiq.

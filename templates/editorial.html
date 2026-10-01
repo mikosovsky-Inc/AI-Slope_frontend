@@ -7,7 +7,7 @@
 {% if task %}
 <section class="panel" id="analysis-task" data-status-url="/task-status/{{ task.id }}" data-status="{{ task.status }}"><h2>{{ 'Generowanie pomysłów' if view == 'ideas' else 'Badanie konkurencji' }}</h2><p id="task-message" role="status">Stan zadania: {{ task.status }}</p>
 {% if task.status == 'succeeded' %}<p>Zadanie zakończone. Aktualne wyniki znajdują się poniżej.</p>{% elif task.status in ['failed','needs_review'] %}<p>Zadanie nie zakończyło się powodzeniem. Sprawdź strategię kanału i spróbuj ponownie.</p>{% else %}<p>Wyniki pojawią się po zakończeniu zadania. Możesz też odświeżyć stan ręcznie.</p>{% endif %}
-<a href="{{ request.url }}">Odśwież stan ↻</a></section><script src="/assets/scripts/channel.js?v=1" defer></script>
+<a href="{{ request.url }}">Odśwież stan ↻</a></section><script src="/assets/scripts/channel.js?v=2" defer></script>
 {% endif %}
 {% if channel %}
 <section class="panel">

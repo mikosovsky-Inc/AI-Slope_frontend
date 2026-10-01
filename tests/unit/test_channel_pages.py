@@ -164,3 +164,12 @@ def test_page_includes_channel_changes_committed_when_task_completes(studio):
     response = client.get(f"/channels/{CHANNEL}?task_id={TASK}")
     assert "Stan zadania: succeeded" in response.text
     assert "Kanał po zakończeniu analizy" in response.text
+
+
+@pytest.mark.parametrize("status", [None, 123, [], ""])
+def test_poll_rejects_invalid_backend_status(studio, status):
+    client, state = studio
+    state["task_status"] = status
+    response = client.get(f"/task-status/{TASK}")
+    assert response.status_code == 502
+    assert "status" not in response.json()

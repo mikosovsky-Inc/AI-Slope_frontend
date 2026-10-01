@@ -5,10 +5,16 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
+from pydantic import BaseModel, Field, StrictStr
 
 from app.api.client import BackendError
 from app.api.panel import User, read
 from app.config import get_settings
+
+
+class TaskPoll(BaseModel):
+    status: StrictStr = Field(min_length=1)
+
 
 router = APIRouter()
 SESSION = "ai_slop_session"
@@ -223,8 +229,8 @@ async def task_status(request: Request, task_id: UUID):
     if not token:
         return JSONResponse({"message": "Sesja wygasła. Zaloguj się ponownie."}, status_code=401)
     try:
-        result = await request.app.state.backend.request("GET", f"/tasks/{task_id}", token=token)
-        return {"status": result["status"]}
+        result = await read(request.app.state.backend, f"/tasks/{task_id}", token, TaskPoll)
+        return result.model_dump()
     except BackendError as exc:
         return JSONResponse(
             {"message": "Nie można odczytać stanu zadania. Odśwież stronę."}, status_code=exc.status
