@@ -1,0 +1,65 @@
+name: Frontend tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python tests and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies from lockfile
+        run: uv sync --locked --dev
+
+      - name: Check lint and formatting
+        run: |
+          uv run --no-sync ruff check .
+          uv run --no-sync ruff format --check .
+
+      - name: Run Python tests with mocked HTTP
+        run: uv run --no-sync pytest -ra
+
+  browsers:
+    name: Chromium and WebKit polling regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies from lockfile
+        run: uv sync --locked --dev
+
+      - name: Install browsers and system dependencies
+        run: uv run --no-sync playwright install --with-deps chromium webkit
+
+      - name: Test polling in both browsers with mocked HTTP
+        run: uv run --no-sync python tests/polling_smoke.py

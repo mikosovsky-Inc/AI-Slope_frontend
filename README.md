@@ -251,3 +251,20 @@ Deterministyczny test w Chromium i WebKit (bez backendu i kont użytkowników):
 ```bash
 uv run --no-active python tests/polling_smoke.py
 ```
+
+## Etap 12 — GitHub Actions frontendu
+
+`.github/workflows/tests.yml` uruchamia się przy każdym pushu i pull requeście
+w repozytorium frontendu. Dwa niezależne zadania sprawdzają:
+
+- Python 3.12: instalację z `uv.lock`, Ruff i testy pytest z mock HTTP;
+- Chromium i WebKit: regresje pollingu przez `tests/polling_smoke.py`.
+
+Workflow instaluje przeglądarki wraz z zależnościami systemowymi. Nie wymaga
+sekretów, `.env`, bazy, backendu ani płatnych providerów. Nowszy przebieg dla tej
+samej gałęzi anuluje poprzedni. Limity czasu wynoszą 10 i 15 minut.
+
+To CI frontendu, nie pełny test obu serwisów. Testy `*_smoke.py` wymagające
+izolowanego backendu pozostają uruchamiane osobno zgodnie z instrukcjami powyżej.
+Konfiguracja zacznie działać po wysłaniu jej do repozytorium GitHub. Wymaganie
+zielonych kontroli przed scaleniem ustawia się w regułach gałęzi na GitHubie.

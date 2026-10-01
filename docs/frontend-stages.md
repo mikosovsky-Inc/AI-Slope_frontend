@@ -53,6 +53,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 9. [x] Źródła, fakty i cytowania TOP5.
 10. [x] Plan wizualny filmu.
 11. [x] Niezawodność pollingu i ochrona niezapisanych formularzy.
+12. [x] GitHub Actions frontendu: Python, Ruff i testy przeglądarkowe.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -418,3 +419,24 @@ UTF-8 strony fixture po pierwszej próbie testu. Integracja na prawdziwym API
 z izolowanym SQLite i mock LLM potwierdziła tworzenie kanału, zapis, analizę
 asynchroniczną, strategię, activate/pause oraz mobilny widok. Obejrzano screenshot.
 Harness wykonuje runner przy odczycie zadania; nie testuje Redis/Dramatiq.
+
+## Etap 12 — automatyczne testy frontendu (zakończony)
+
+Audyt repozytoriów wykazał workflow wyłącznie w backendzie. Nie było osobnego
+CI frontendu. Sprawdzono backendowe tests.yml jako wzorzec narzędzi, frontendowy
+pyproject/lockfile i testy. Etap dotyczy automatyzacji istniejących kontroli;
+nie zmienia kontraktu API, widoków ani logiki backendu.
+
+Dodano .github/workflows/tests.yml dla push i pull_request, Python 3.12,
+uv sync --locked --dev, Ruff check/format i pytest. Osobny job instaluje
+Chromium/WebKit z zależnościami systemowymi i wykonuje deterministyczne regresje
+pollingu z mock HTTP. Oba joby mają timeout, minimalne contents:read i checkout
+bez zachowania credentials. Setup-uv jest przypięty do tego samego SHA co backend.
+Concurrency anuluje starszy przebieg tego samego workflow/ref.
+
+Walidacja lokalna: 132 testy, Ruff, format-check, diff-check; Chromium i WebKit
+przeszły test pollingu. Sparsowano YAML i sprawdzono triggery, joby i permissions.
+Nie uruchomiono workflow na runnerze GitHub/Ubuntu ani nie zmieniano branch
+protection; pierwszy zdalny przebieg nastąpi po pushu. Dotychczasowe integracje
+z izolowanym backendem nie zostały włączone do tego workflow. Zmiana nie wymaga
+nowego smoke obu serwisów ani inspekcji niezmienionych widoków.
