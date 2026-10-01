@@ -49,6 +49,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 5. [x] Filmy, sceny, produkcja i podgląd zasobów.
 6. [x] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
 7. [x] Podsumowanie kanału i podgląd ostatniego planu produkcji.
+8. [x] Historia kontroli jakości filmu.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -300,3 +301,30 @@ na izolowanym SQLite potwierdził OpenAPI, nawigację, pusty plan i koszty w Chr
 oraz WebKit z wyłączonym JS. Obejrzano screenshot mobilny, brak overflow 390 px.
 Smoke nie uruchamia schedulera ani nie sprawdza jego dostarczania zadań;
 niepuste plany sprawdzono deterministycznie z mock HTTP.
+
+## Etap 8 — historia kontroli jakości (zakończony)
+
+Ponownie przesłana specyfikacja zachowuje dotychczasowy kierunek. Audyt
+zarejestrowanych routes wykazał niewykorzystany przez frontend GET quality-checks.
+Sprawdzono routes/quality.py, QualityCheckRead/QualityReport, statusy QualityStatus,
+read_checks, testy quality (auth, własność, skipped, naprawy) i historię etapu 16.
+
+Dodano /videos/{id}/quality, dostępny z filmu. Projekcje Pydantic obejmują raport,
+kontrole, identyfikatory powiązań i daty. Pusty report_json podczas sprawdzania
+jest poprawnym stanem. Wyniki nieznane pozostają widoczne. Interfejs rozróżnia
+passed/failed/skipped; repaired nie oznacza gotowego filmu. Starszy raport
+nie jest interpretowany jako kontrola aktualnego renderu. Link pobrania używa
+final_asset_id konkretnego raportu. Kod nie pokazuje surowych danych providera.
+
+Odczyt przez BackendClient z sesją właściciela; brak lokalnej logiki oceny,
+bez dostępu do ORM/storage. Ekran jest SSR, z ręcznym odświeżaniem. W tym etapie
+nie dodano ręcznego wywoływania QC — produkcja już zleca kontrolę automatycznie.
+Nie ma blokujących braków kontraktu dla historii raportów.
+
+Walidacja: 109 testów, Ruff, format-check, diff-check. Nowe testy pokrywają
+pustą historię i raport w toku, skipped/failed/nieznane wyniki, escapowanie,
+zerową długość, dokładny final_asset_id, auth, błędy API i walidację odpowiedzi.
+Smoke: prawdziwy backend HTTP z izolowanym SQLite/storage, mock providerzy,
+FFmpeg; film READY, odtwarzanie i Range, raport passed oraz skipped dla disabled
+visual provider w Chromium/WebKit. Obejrzano mobilny screenshot WebKit;
+brak overflow przy 390 px. Nie testowano płatnego vision ani Redis/Dramatiq.

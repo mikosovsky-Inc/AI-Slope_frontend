@@ -188,3 +188,18 @@ uv run --no-active python tests/overview_smoke.py \
   --isolated-frontend-url http://127.0.0.1:13001 \
   --isolated-backend-url http://127.0.0.1:18091
 ```
+
+## Etap 8 — raporty kontroli jakości
+
+W szczegółach filmu wybierz **Kontrola jakości**. Historia pokazuje próby,
+wyniki kontroli, daty, długość filmu i źródło oceny obrazu. Każdy raport prowadzi
+do własnych zadań i sprawdzonego pliku. Wynik `skipped` oznacza kontrolę pominiętą,
+a `repaired` nie zastępuje kolejnego zaliczonego raportu. Odświeżanie jest ręczne.
+
+Smoke na izolowanej instancji z mock providerami i FFmpeg:
+
+```bash
+uv run --no-active python tests/quality_smoke.py \
+  --isolated-frontend-url http://127.0.0.1:13001 \
+  --isolated-backend-url http://127.0.0.1:18091
+```
