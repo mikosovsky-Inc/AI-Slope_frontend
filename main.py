@@ -12,6 +12,8 @@ from app.api.panel import ChannelPage, Dashboard, User, read
 from app.config import ROOT, Settings, get_settings  # noqa: F401
 from app.pages.channels import router as channel_pages
 from app.pages.editorial import router as editorial_pages
+from app.pages.media import router as media_pages
+from app.pages.videos import router as video_pages
 
 SESSION = "ai_slop_session"
 CSRF = "ai_slop_csrf"
@@ -34,6 +36,8 @@ templates = Jinja2Templates(directory=ROOT / "templates")
 app.state.templates = templates
 app.include_router(channel_pages)
 app.include_router(editorial_pages)
+app.include_router(video_pages)
+app.include_router(media_pages)
 
 
 def cookie(response, name, value, max_age=None):

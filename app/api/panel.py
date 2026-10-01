@@ -22,6 +22,7 @@ class Costs(BaseModel):
 
 
 class RecentVideo(BaseModel):
+    id: UUID
     title: str
     status: str
     language: str

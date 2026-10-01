@@ -59,3 +59,23 @@ Nadal obowiązuje brak historii zadań kanału opisany przy etapie 3.
 Badanie konkurencji jest lokalne i ma to odzwierciedlenie w UI. Nie dodano
 fikcyjnego wyszukiwania online, statystyk oglądalności ani formularza źródeł.
 Panel konfiguracji źródeł wymaga osobnego kontraktu, jeśli zostanie zamówiony.
+
+
+## Etap 5: efektywny transport podglądu plików
+
+Obecny GET /api/v1/assets/{asset_id}/download zwraca cały plik. Frontend zapewnia
+Range przez tymczasowe pobranie całego zasobu. Działa z WebKit, ale powtarza
+transfer backend → frontend i zużywa tymczasowe miejsce na dysku.
+
+Minimalna propozycja rozszerzenia tego samego endpointu:
+- GET (opcjonalnie HEAD) /api/v1/assets/{asset_id}/download.
+- Request: Authorization, Range (opcjonalny), If-Range (opcjonalny); bez body.
+- Response: strumień bajtów, Content-Type, Content-Length, Accept-Ranges,
+  Content-Range przy 206/416, stabilny ETag; statusy 200/206/416.
+- UX: szybki start i przewijanie wideo bez powtórnego pobierania całości.
+- Własność i integralność pozostają odpowiedzialnością backendu; bez publicznego
+  bucketa i bez przekazywania JWT do przeglądarki.
+
+Brak nie blokuje obecnego podglądu, ale ogranicza jego wydajność. Nie zmieniono
+backendu w tym etapie. Nie dodano fikcyjnego procentowego postępu produkcji ani
+szacowanego czasu zakończenia, których API nie udostępnia.

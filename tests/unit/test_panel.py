@@ -22,7 +22,12 @@ def panel():
             "pending_actual_events": 1,
         },
         "recent_videos": [
-            {"title": "<script>alert(1)</script>", "status": "READY", "language": "pl"}
+            {
+                "id": "00000000-0000-0000-0000-000000000002",
+                "title": "<script>alert(1)</script>",
+                "status": "READY",
+                "language": "pl",
+            }
         ],
     }
 

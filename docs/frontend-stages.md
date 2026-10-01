@@ -46,7 +46,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 2. [x] Dashboard i lista kanałów z rzeczywistych endpointów.
 3. [x] Onboarding kanału i setup/strategy, polling analizy.
 4. [x] Konkurenci i pomysły.
-5. [ ] Filmy, sceny, produkcja i podgląd zasobów.
+5. [x] Filmy, sceny, produkcja i podgląd zasobów.
 6. [ ] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
@@ -173,3 +173,68 @@ Testowy runner jest uruchamiany przy odczycie zadania w izolowanym harnessie;
 test nie pokrywa dostarczania Redis/Dramatiq ani płatnych providerów.
 
 Następny etap: filmy, sceny, produkcja i podgląd zasobów.
+
+
+## Etap 5 — filmy, sceny, produkcja i zasoby (zakończony)
+
+Sprawdzono routes ideas/panel/render/scripts/research, VideoRead/SceneRead/StatusRead,
+AssetRead, serwisy create_video/start_production/edit_scene/regenerate oraz
+kontynuację workflow w workerze. OpenAPI potwierdzono na uruchomionym backendzie
+testowym. Backend jest źródłem statusów, walidacji i dozwolonych przejść.
+
+### Funkcje
+
+- Pomysł approved: POST create-video, przekierowanie na film. Used: ta sama
+  idempotentna operacja otwiera istniejący film. Obsługiwane odpowiedzi 200/201/202.
+- Utworzenie w trybie asynchronicznym może uruchomić cały pipeline do jakości,
+  nie tylko scenariusz. Frontend nie wysyła równolegle dodatkowego produce.
+- /channels/{id}/videos: lista po 10, filtrowanie statusami z OpenAPI.
+  Linki z kanału, pomysłów i ostatnich filmów dashboardu.
+- /videos/{id}: szczegóły, aktualny stan, ostatnie zadania (limit API 100), sceny,
+  zasoby; odświeżanie przez /video-status/{id}. Backendowy has_active_tasks
+  steruje pollingiem. Zmiana stanu odświeża stronę; niezapisane pola blokują
+  automatyczny reload. Wtedy UI informuje o nowych danych. Ręczny refresh działa bez JS.
+- Przy idle SCRIPT_READY można zlecić produkcję. W trybie eager lub bez
+  rozpoczętego workflow dostępne są odpowiednie akcje przygotowania STORY,
+  research TOP5 i scenariusza TOP5. Końcowe uprawnienia/stany sprawdza backend.
+- Edytor scen: narracja STORY, visual_prompt, mood, caption_emphasis (wiersze).
+  TOP5 nie wysyła narracji nawet po ręcznej manipulacji formularzem. Backend
+  blokuje sceny z historią generacji i aktywne zadania. Błąd zachowuje wpisane pola.
+- Regeneracja obrazu/wideo zgodnie z visual_type oraz audio, z Idempotency-Key.
+  Regeneracja sceny nie jest obietnicą przebudowania gotowego filmu; rewizje i
+  odzyskiwanie pozostają etapem 6. Niedozwolone operacje dostają komunikat 409.
+
+### Media
+
+/media/{asset_id} weryfikuje dostęp przez pobranie pliku z backendu z JWT użytkownika.
+Nie otwiera lokalnego storage backendu ani bucketa. JWT nie trafia do HTML, URL
+ani JavaScript. Backend nadal sprawdza własność i integralność pliku.
+
+Plik jest pobierany strumieniowo do prywatnego pliku tymczasowego, następnie
+FileResponse obsługuje Range/206 (potrzebne m.in. WebKit). Usuwanie w finally
+obejmuje również błędny zakres i rozłączenie klienta. Bez współdzielonego cache,
+bez publicznych ścieżek. Domyślny limit MEDIA_MAX_BYTES: 512 MiB na pobranie.
+Przy każdym żądaniu zakresu frontend pobiera cały plik z backendu — to koszt
+obecnego braku Range w API, a nie optymalny transport dużych plików.
+
+Inline dopuszczone wyłącznie typy rastrowych obrazów, MP4/WebM i audio.
+Pozostałe typy, w tym napisy, są pobierane jako application/octet-stream attachment.
+Nazwy plików oparte są o UUID, nie o niezweryfikowany nagłówek backendu.
+Wideo/audio mają preload=none, obrazy lazy. Brak automatycznej publikacji.
+
+### Walidacja
+
+76 testów jednostkowych, Ruff, format-check i diff-check. Testy obejmują
+create-video bez podwójnego uruchamiania, paginację, aktywne zadania, TOP5,
+zachowanie edycji po błędzie, CSRF, zgodność sceny z filmem, klucze regeneracji,
+auth mediów, Range 206/416, bezpieczne MIME, limit rozmiaru i cleanup.
+
+Integracja: prawdziwy backend HTTP + tymczasowy SQLite/storage + mock providerzy,
+runnery zadań wykonane w tle, FFmpeg. Film STORY 45 s przeszedł cały pipeline do
+READY. Chromium i WebKit faktycznie odtworzyły final_video (currentTime > 0),
+pobrały Range 0–31 (206), bez overflow przy 390 px. Obejrzano screenshot WebKit.
+Nie testowano Redis/Dramatiq ani płatnych providerów. Wstępny 10-sekundowy fixture
+miał sceny krótsze od części mock narracji i został poprawnie zablokowany przez
+renderer; zmieniono dane testowe, nie reguły backendu.
+
+Następny etap: szczegóły kosztów, obsługa zadań i odzyskiwanie/rewizje.

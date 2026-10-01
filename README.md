@@ -104,8 +104,7 @@ Sprawdza Chromium z pollingiem i WebKit bez JS z ręcznym odświeżeniem.
 W szczegółach kanału wybierz **Konkurenci** lub **Pomysły**. Po przygotowaniu
 strategii możesz zlecić badanie lokalnych benchmarków albo wygenerować 10–20
 pomysłów. Listy mają paginację. Pomysły można filtrować, zatwierdzać i odrzucać;
-wykorzystanych pomysłów nie można zmieniać. Utworzenie filmu będzie dostępne
-w następnym etapie.
+wykorzystanych pomysłów nie można zmieniać. Utworzenie filmu jest dostępne od etapu 5.
 
 Badanie konkurencji obecnie korzysta z rekordów providera backendowego, nie
 przeszukuje internetu. Brak wyników jest prawidłowy przy pustej konfiguracji.
@@ -121,3 +120,35 @@ uv run --no-active python tests/editorial_smoke.py \
 ```
 
 Test tworzy syntetyczne konta i treści — nie uruchamiaj go na swoich danych.
+
+
+## Etap 5 — filmy, sceny i produkcja
+
+Na zatwierdzonym pomyśle kliknij **Utwórz film**. W trybie asynchronicznym backend
+może uruchomić cały pipeline, łącznie z generowaniem zasobów i renderem.
+**Otwórz film** na wykorzystanym pomyśle prowadzi do istniejącego filmu.
+W zakładce **Filmy** znajdziesz listę i filtr statusów.
+
+Szczegóły filmu pokazują zadania, sceny i zasoby. Przy aktywnych zadaniach stan
+odświeża się automatycznie; niezapisane zmiany w formularzu blokują reload.
+**Uruchom produkcję** jest dostępne dla gotowego scenariusza bez aktywnych zadań.
+Edycja scen i pojedyncze generacje podlegają ograniczeniom backendu. Narracji
+TOP5 nie można edytować niezależnie od researchu. Obsługa rewizji i odzyskiwania
+będzie częścią kolejnego etapu.
+
+Podgląd/pobieranie zasobów odbywa się przez uwierzytelniony frontend. Wymaga
+wolnego miejsca w katalogu plików tymczasowych: do `MEDIA_MAX_BYTES` na pobranie
+(domyślnie 536870912 bajtów). Pliki są usuwane po odpowiedzi. Obsługiwany jest
+Range, ale każde żądanie pobiera cały zasób z backendu — większe pliki będą
+wymagać optymalizacji kontraktu API opisanej w backend-requirements.md.
+
+Test prawdziwej produkcji i odtwarzania, **wyłącznie izolowany mock stack**:
+
+```sh
+uv run --no-active python tests/video_smoke.py \
+  --isolated-frontend-url http://localhost:13001 \
+  --isolated-backend-url http://localhost:18091
+```
+
+Wymaga FFmpeg/FFprobe i działającego workera. Tworzy testowy film STORY;
+sprawdza READY, odtwarzanie Chromium/WebKit i pobieranie zakresowe.
