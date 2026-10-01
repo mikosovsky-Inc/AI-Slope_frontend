@@ -220,3 +220,19 @@ uv run --no-active python tests/research_smoke.py \
   --isolated-frontend-url http://127.0.0.1:13001 \
   --isolated-backend-url http://127.0.0.1:18091
 ```
+
+## Etap 10 — plan wizualny
+
+W szczegółach filmu wybierz **Plan wizualny**. Widok pokazuje budżet obrazu,
+szacowany koszt, zapisane stawki oraz typ obrazu, styl, ruch kamery i priorytet
+każdej sceny. Priorytet generowania nie zmienia kolejności odtwarzania scen.
+Kwoty planu nie są rozliczeniem całej produkcji; aktualny budżet jest pod osobnym
+linkiem. Brak planu jest normalnym stanem przed etapem reżyserii.
+
+Smoke na izolowanym backendzie z mock providerami i FFmpeg:
+
+```bash
+uv run --no-active python tests/direction_smoke.py \
+  --isolated-frontend-url http://127.0.0.1:13001 \
+  --isolated-backend-url http://127.0.0.1:18091
+```

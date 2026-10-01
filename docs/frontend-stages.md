@@ -51,6 +51,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 7. [x] Podsumowanie kanału i podgląd ostatniego planu produkcji.
 8. [x] Historia kontroli jakości filmu.
 9. [x] Źródła, fakty i cytowania TOP5.
+10. [x] Plan wizualny filmu.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -360,3 +361,32 @@ fikcyjny korpus z fixture TOP5. Powstały 2 dokumenty, 6 faktów i 5 cytowań;
 Chromium i WebKit (JS wyłączony) sprawdziły nawigację i treść dokumentu.
 Obejrzano screenshot mobilny, bez overflow 390 px. Nie testowano sieciowego
 research providera (nie jest zaimplementowany), workerów ani renderowania TOP5.
+
+## Etap 10 — plan wizualny filmu (zakończony)
+
+Zakres frontendu uzupełnia istniejący GET /videos/{id}/direction. Sprawdzono
+routes/director.py, DirectorRead/DirectedScene/VisualEstimates, get/read_plan,
+testy test_director.py i historię backendowego Directora. Backend wyznacza
+image/video, ruch, styl, ważność, priorytet i koszt; frontend tylko je odczytuje.
+
+Dodano /videos/{id}/direction i link z filmu. Kwoty są Decimal bez przeliczania;
+stawki to snapshot szacunków operatora, nie aktualne ceny providera. UI rozróżnia
+kolejność scen od priorytetu generowania, a ważność od jakości. Żądany udział
+video nie jest prezentowany jako faktyczny udział. Plan zawiera aktualnie
+zwracane sceny i nie stanowi archiwum poprzednich rewizji.
+
+Odpowiedź przechodzi Pydantic, video_id jest sprawdzane. Brak planu (404 po
+poprawnym odczycie filmu) daje pusty widok; brak filmu i błędy API pozostają
+błędami. Nieznane wartości prezentacyjne są zachowane. Odczyt wymaga sesji,
+JWT idzie wyłącznie do backendu. SSR z ręcznym odświeżaniem; brak nowych mutacji
+ani bezpośredniego dostępu do ORM lub providera. Istniejąca produkcja uruchamia
+Directora. Dla podglądu planu nie ma blokującego braku kontraktu.
+
+Walidacja: 128 testów, Ruff, format-check i diff-check. Nowe regresje obejmują
+precyzję kwot, oddzielne pozycje scen i priorytety, escapowanie opisów,
+nieznane typy/ruchy, brak planu vs brak filmu, auth, błędy i obce video_id.
+Integracja: rzeczywisty backend HTTP, izolowany SQLite/storage, mock providerzy
+oraz FFmpeg. Film osiągnął READY. Chromium i WebKit potwierdziły kwoty i liczbę
+scen z API, nawigację, rozwijanie szczegółów, odtwarzanie i Range. Obejrzano
+mobilny screenshot WebKit; brak overflow przy 390 px. Nie testowano płatnych
+providerów ani dostarczania zadań przez Redis/Dramatiq.

@@ -11,6 +11,7 @@ from app.api.client import BackendClient, BackendError
 from app.api.panel import ChannelPage, Dashboard, User, read
 from app.config import ROOT, Settings, get_settings  # noqa: F401
 from app.pages.channels import router as channel_pages
+from app.pages.direction import router as direction_pages
 from app.pages.editorial import router as editorial_pages
 from app.pages.media import router as media_pages
 from app.pages.operations import router as operation_pages
@@ -39,6 +40,7 @@ app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")
 templates = Jinja2Templates(directory=ROOT / "templates")
 app.state.templates = templates
 app.include_router(channel_pages)
+app.include_router(direction_pages)
 app.include_router(editorial_pages)
 app.include_router(video_pages)
 app.include_router(media_pages)
