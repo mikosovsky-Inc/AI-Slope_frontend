@@ -50,3 +50,12 @@ Minimalna propozycja:
 
 To propozycja API, nie zaimplementowany endpoint. Bezpośredni dostęp do DB
 lub odgadywanie task_id nie jest rozwiązaniem używanym przez frontend.
+
+
+## Etap 4: konkurenci i pomysły
+
+Brak blokujących braków API dla listowania, generowania i approve/reject.
+Nadal obowiązuje brak historii zadań kanału opisany przy etapie 3.
+Badanie konkurencji jest lokalne i ma to odzwierciedlenie w UI. Nie dodano
+fikcyjnego wyszukiwania online, statystyk oglądalności ani formularza źródeł.
+Panel konfiguracji źródeł wymaga osobnego kontraktu, jeśli zostanie zamówiony.

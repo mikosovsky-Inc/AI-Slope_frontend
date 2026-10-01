@@ -45,7 +45,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 1. [x] Fundament SSR, BackendClient, auth, błędy, testy.
 2. [x] Dashboard i lista kanałów z rzeczywistych endpointów.
 3. [x] Onboarding kanału i setup/strategy, polling analizy.
-4. [ ] Konkurenci i pomysły.
+4. [x] Konkurenci i pomysły.
 5. [ ] Filmy, sceny, produkcja i podgląd zasobów.
 6. [ ] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
 
@@ -135,3 +135,41 @@ Następny etap: konkurenci i pomysły.
 
 Test bez JS wykrył wyścig między odczytem kanału a końcem zadania.
 Poprawiono kolejność odczytów: status zadania, potem strategia. Dodano regresję.
+
+
+## Etap 4 — konkurenci i pomysły (zakończony)
+
+Przed implementacją sprawdzono routes/ideas.py i channels.py, schematy
+CompetitorResearchResult/CompetitorPage/ResearchSummary, IdeaPage/IdeaRead/IdeaBatch,
+serwisy decide_idea/generate_ideas, lokalny research provider oraz testy ideas
+ i competitors. OpenAPI potwierdzono na izolowanym uruchomionym backendzie.
+
+Dodano zakładki /channels/{id}/competitors i /channels/{id}/ideas, osiągalne ze
+szczegółów kanału. Listy mają paginację po 10. Pomysły można filtrować według
+statusów pobranych z OpenAPI. Formularz generowania przesyła count jako query
+param (10–20), nie jako JSON body. Badanie konkurentów wywołuje
+/channels/{id}/competitor-research. Obie operacje mają Idempotency-Key oraz
+obsługują wyniki synchroniczne i TaskRead. Stan zadania czytany jest przed wynikami.
+
+Pomysły pokazują koncept, filar, format, hook, uzasadnienie oraz heurystyki
+z objaśnieniami. Approve/reject są formularzami POST z CSRF, przekazanymi do API.
+Backend decyduje o dozwolonych zmianach; used nie pokazuje przycisków decyzji.
+Po decyzji filtr i offset pozostają zachowane; kanał przekierowania pochodzi
+z odpowiedzi API. Pusta strona po decyzji pozwala wrócić na pierwszą stronę.
+Tworzenie Video zostaje w etapie 5, wraz z widokiem filmu.
+
+Konkurenci to lokalne benchmarki skonfigurowanego providera. UI nie obiecuje
+wyszukiwania internetu, wyświetla brak danych zamiast zerowych metryk. Pusty
+research nie usuwa poprzednich rekordów. Linki do profili są walidowane jako
+AnyHttpUrl, otwierane z noopener/noreferrer; tekst jest escapowany przez Jinja2.
+Odpowiedzi list są walidowane przez modele Pydantic. Brakujące funkcje domenowe
+nie zostały dodane do frontendu ani backendu.
+
+Walidacja: 61 testów jednostkowych, Ruff, diff-check. Integration smoke na
+prawdziwym backendzie z mock LLM i izolowanym SQLite: 12 pomysłów, strony 10+2,
+approve/reject, filtry, zakończony research z pustym lokalnym źródłem. Chromium
+z pollingiem oraz WebKit bez JS; ręcznie obejrzane screenshoty desktop/mobile.
+Testowy runner jest uruchamiany przy odczycie zadania w izolowanym harnessie;
+test nie pokrywa dostarczania Redis/Dramatiq ani płatnych providerów.
+
+Następny etap: filmy, sceny, produkcja i podgląd zasobów.

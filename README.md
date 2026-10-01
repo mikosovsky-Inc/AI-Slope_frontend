@@ -97,3 +97,27 @@ uv run --no-active python tests/channel_smoke.py \
 ```
 
 Sprawdza Chromium z pollingiem i WebKit bez JS z ręcznym odświeżeniem.
+
+
+## Etap 4 — konkurenci i pomysły
+
+W szczegółach kanału wybierz **Konkurenci** lub **Pomysły**. Po przygotowaniu
+strategii możesz zlecić badanie lokalnych benchmarków albo wygenerować 10–20
+pomysłów. Listy mają paginację. Pomysły można filtrować, zatwierdzać i odrzucać;
+wykorzystanych pomysłów nie można zmieniać. Utworzenie filmu będzie dostępne
+w następnym etapie.
+
+Badanie konkurencji obecnie korzysta z rekordów providera backendowego, nie
+przeszukuje internetu. Brak wyników jest prawidłowy przy pustej konfiguracji.
+Heurystyki pomysłów nie są prognozami wyświetleń. Zadania obsługują polling
+oraz ręczne odświeżanie bez JS. Zachowaj adres z task_id do śledzenia danej próby.
+
+Test integracyjny (izolowany stack, mock LLM, worker):
+
+```sh
+uv run --no-active python tests/editorial_smoke.py \
+  --isolated-frontend-url http://localhost:13001 \
+  --isolated-backend-url http://localhost:18091
+```
+
+Test tworzy syntetyczne konta i treści — nie uruchamiaj go na swoich danych.

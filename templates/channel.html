@@ -31,6 +31,7 @@
 </form></section>
 {% endif %}
 {% if channel %}
+<nav class="channel-tabs" aria-label="Sekcje kanału"><a href="/channels/{{ channel.id }}/competitors">Konkurenci ↗</a><a href="/channels/{{ channel.id }}/ideas">Pomysły ↗</a></nav>
 <section class="panel"><h2>Strategia kanału</h2>
 <p>Analiza zapisze nową strategię, zastępując poprzednią. Nie zmieni automatycznie liczby filmów dziennie w ustawieniach. Zapisz zmiany opisu przed uruchomieniem analizy.</p>
 <form method="post" action="/channels/{{ channel.id }}/analyze"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="key" value="{{ key }}"><button type="submit" class="primary" {% if task and task.status in ['queued', 'running'] %}disabled{% endif %}>ANALIZUJ OPIS KANAŁU</button></form>

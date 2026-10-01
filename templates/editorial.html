@@ -1,0 +1,36 @@
+{% extends "studio_base.html" %}
+{% block content %}
+{% if channel_id %}<nav class="channel-tabs" aria-label="Sekcje kanału"><a href="/channels/{{ channel_id }}">Ustawienia i strategia</a><a href="/channels/{{ channel_id }}/competitors" {% if view == 'competitors' %}aria-current="page"{% endif %}>Konkurenci</a><a href="/channels/{{ channel_id }}/ideas" {% if view == 'ideas' %}aria-current="page"{% endif %}>Pomysły</a></nav>{% else %}<a href="/channels">Wszystkie kanały</a>{% endif %}
+<div class="page-heading"><div><p class="eyebrow">{{ channel.name if channel else 'TWÓJ KANAŁ' }}</p><h1>{{ 'Pomysły na filmy.' if view == 'ideas' else 'Konkurenci.' }}</h1></div></div>
+<p id="form-message" class="message" role="alert" tabindex="-1" {% if not message %}hidden{% endif %}>{{ message }}</p>
+{% if message and channel_id %}<a href="/channels/{{ channel_id }}/{{ view }}">Odśwież dane ↻</a>{% endif %}
+{% if task %}
+<section class="panel" id="analysis-task" data-status-url="/task-status/{{ task.id }}" data-status="{{ task.status }}"><h2>{{ 'Generowanie pomysłów' if view == 'ideas' else 'Badanie konkurencji' }}</h2><p id="task-message" role="status">Stan zadania: {{ task.status }}</p>
+{% if task.status == 'succeeded' %}<p>Zadanie zakończone. Aktualne wyniki znajdują się poniżej.</p>{% elif task.status in ['failed','needs_review'] %}<p>Zadanie nie zakończyło się powodzeniem. Sprawdź strategię kanału i spróbuj ponownie.</p>{% else %}<p>Wyniki pojawią się po zakończeniu zadania. Możesz też odświeżyć stan ręcznie.</p>{% endif %}
+<a href="{{ request.url }}">Odśwież stan ↻</a></section><script src="/assets/scripts/channel.js?v=1" defer></script>
+{% endif %}
+{% if channel %}
+<section class="panel">
+{% if view == 'competitors' %}<h2>Benchmarki dla Twojego kanału</h2><p>Obecne badanie dopasowuje lokalnie skonfigurowane rekordy do słów kluczowych strategii. Nie przeszukuje internetu. Pusty wynik nie oznacza braku konkurencji.</p><p>Odświeżenie aktualizuje znalezione rekordy; nie usuwa poprzednio zapisanych benchmarków.</p>{% else %}<h2>Kolejne tematy dla Twoich filmów</h2><p>Generowanie korzysta ze strategii kanału i zapisanych benchmarków. Najpierw przeprowadź analizę opisu w ustawieniach kanału.</p><p>Oceny oryginalności i potencjału wizualnego to heurystyki modelu, nie prognozy wyświetleń.</p>{% endif %}
+<form method="post" action="/channels/{{ channel_id }}/{{ 'ideas/generate' if view == 'ideas' else 'competitors/research' }}">
+<input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="key" value="{{ key }}">
+{% if view == 'ideas' %}<label for="count">LICZBA POMYSŁÓW (10–20)</label><input id="count" name="count" type="number" min="10" max="20" step="1" value="{{ count }}" required>{% endif %}
+<button class="primary" type="submit" {% if task and task.status in ['queued','running'] %}disabled{% endif %}>{{ 'GENERUJ POMYSŁY' if view == 'ideas' else 'ZBADAJ KONKURENCJĘ' }}</button>
+</form></section>
+{% endif %}
+{% if data %}
+{% if view == 'ideas' %}<form class="panel" method="get" action="/channels/{{ channel_id }}/ideas"><label for="status">STATUS POMYSŁU</label><select id="status" name="status"><option value="">Wszystkie</option>{% for value in statuses %}<option value="{{ value }}" {% if selected == value %}selected{% endif %}>{{ {'candidate':'Do oceny','approved':'Zatwierdzone','rejected':'Odrzucone','used':'Wykorzystane'}.get(value,value) }}</option>{% endfor %}</select>{% if task %}<input type="hidden" name="task_id" value="{{ task.id }}">{% endif %}<button class="primary secondary" type="submit">FILTRUJ</button></form>{% endif %}
+<p class="muted">Wyników: {{ data.total }}</p>
+{% for item in data.items %}
+<article class="panel editorial-card">
+{% if view == 'ideas' %}
+<div class="channel-heading"><span class="badge">{{ item.status }}</span><span class="badge">{{ item.format|upper }}</span></div><h2>{{ item.title }}</h2><p>{{ item.concept }}</p><dl class="strategy"><dt>Filar tematyczny</dt><dd>{{ item.content_pillar }}</dd><dt>Początek filmu</dt><dd>{{ item.hook_idea }}</dd><dt>Uzasadnienie</dt><dd>{{ item.rationale }}</dd><dt>Oryginalność (heurystyka)</dt><dd>{{ item.novelty_heuristic.score }} / 1 — {{ item.novelty_heuristic.rationale }}</dd><dt>Potencjał wizualny (heurystyka)</dt><dd>{{ item.visual_potential_heuristic.score }} / 1 — {{ item.visual_potential_heuristic.rationale }}</dd></dl>
+{% if item.status != 'used' %}<div class="channel-actions">{% for action,label in [('approve','ZATWIERDŹ'),('reject','ODRZUĆ')] %}<form method="post" action="/ideas/{{ item.id }}/{{ action }}"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="channel_id" value="{{ channel_id }}"><input type="hidden" name="offset" value="{{ offset }}"><input type="hidden" name="status" value="{{ selected }}"><button class="primary secondary" type="submit">{{ label }}</button></form>{% endfor %}</div>{% else %}<p>Pomysł wykorzystany — nie można zmienić decyzji.</p>{% endif %}
+{% else %}
+<span class="badge">{{ item.platform }}</span><h2>{{ item.name }}</h2><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Otwórz profil ↗</a><p>{{ item.niche }}</p><dl class="strategy"><dt>Formaty</dt><dd>{{ item.observed_formats|join(', ') or 'Brak danych' }}</dd><dt>Typowa długość</dt><dd>{{ (item.typical_length_seconds ~ ' s') if item.typical_length_seconds else 'Brak danych' }}</dd><dt>Częstotliwość</dt><dd>{{ item.publishing_frequency or 'Brak danych' }}</dd><dt>Notatki</dt><dd>{{ item.notes or 'Brak notatek' }}</dd></dl><h3>Przykładowe tytuły</h3><ul>{% for title in item.example_titles %}<li>{{ title }}</li>{% else %}<li>Brak zapisanych tytułów.</li>{% endfor %}</ul>
+{% endif %}
+</article>
+{% else %}<section class="panel empty"><h2>Brak wyników.</h2><p>{{ 'Zmień filtr lub wygeneruj pomysły po przygotowaniu strategii.' if view == 'ideas' else 'Brak zapisanych benchmarków na tej stronie. Badanie może nie znaleźć pasujących rekordów lokalnych.' }}</p>{% if offset %}<a href="/channels/{{ channel_id }}/{{ view }}">Pierwsza strona</a>{% endif %}</section>{% endfor %}
+<nav class="pagination" aria-label="Strony wyników">{% if offset %}<a href="{{ previous }}">← Poprzednia</a>{% endif %}{% if data.items %}<span>{{ offset + 1 }}–{{ offset + data.items|length }} z {{ data.total }}</span>{% endif %}{% if offset + data.limit < data.total %}<a href="{{ next }}">Następna →</a>{% endif %}</nav>
+{% endif %}
+{% endblock %}
