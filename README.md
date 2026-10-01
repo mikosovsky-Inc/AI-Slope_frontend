@@ -203,3 +203,20 @@ uv run --no-active python tests/quality_smoke.py \
   --isolated-frontend-url http://127.0.0.1:13001 \
   --isolated-backend-url http://127.0.0.1:18091
 ```
+
+## Etap 9 — źródła i fakty TOP5
+
+W szczegółach filmu TOP5 wybierz **Źródła i fakty**. Widok pokazuje fakty
+przypisane do scenariusza, wszystkie zebrane fakty i treść zapisanych dokumentów
+z datą pobrania. Pewność modelu jest heurystyką, nie niezależnym fact-checkingiem.
+Źródła otwierają się w nowej karcie; frontend nie pobiera ich z internetu.
+Research korzysta z lokalnego korpusu backendu, domyślnie pustego.
+
+Smoke wymaga izolowanego backendu w trybie eager, mock LLM i jawnego korpusu
+`source_documents` zgodnego z fixture testów TOP5 backendu (2 dokumenty po 3 fakty):
+
+```bash
+uv run --no-active python tests/research_smoke.py \
+  --isolated-frontend-url http://127.0.0.1:13001 \
+  --isolated-backend-url http://127.0.0.1:18091
+```

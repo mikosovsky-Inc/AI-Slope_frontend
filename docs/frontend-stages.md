@@ -50,6 +50,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 6. [x] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
 7. [x] Podsumowanie kanału i podgląd ostatniego planu produkcji.
 8. [x] Historia kontroli jakości filmu.
+9. [x] Źródła, fakty i cytowania TOP5.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -328,3 +329,34 @@ Smoke: prawdziwy backend HTTP z izolowanym SQLite/storage, mock providerzy,
 FFmpeg; film READY, odtwarzanie i Range, raport passed oraz skipped dla disabled
 visual provider w Chromium/WebKit. Obejrzano mobilny screenshot WebKit;
 brak overflow przy 390 px. Nie testowano płatnego vision ani Redis/Dramatiq.
+
+## Etap 9 — źródła i fakty TOP5 (zakończony)
+
+Przeczytano routes research/scripts, ResearchRead/DocumentRead/FactRead,
+Top5ScriptRead/Citation, read_research/get_script, test_top5_research i historię
+backendowego etapu 9. GET research zwraca pustą kolekcję przed zebraniem źródeł;
+GET script zwraca 404, gdy scenariusz jeszcze nie istnieje. Inne błędy nie są
+interpretowane jako brak scenariusza. Własność sprawdza backend dla obu odczytów.
+
+Nowy /videos/{id}/sources jest dostępny z filmu TOP5. Pokazuje cytowania według
+pozycji sceny z API, osobno wszystkie fakty i zapisane dokumenty. Nie przypisuje
+samodzielnie faktów do narracji, nie selekcjonuje ich według confidence. Nie
+oblicza własnego statusu gotowości. Dokumenty mają datę pobrania i zwijaną treść.
+Nie prezentuje metadanych providera. Dane walidują projekcje Pydantic; identyfikator
+filmu w odpowiedzi musi odpowiadać żądaniu. STORY pokazuje objaśnienie fikcyjnego
+formatu bez odpytywania researchu. Formularze generacji pozostają w widoku filmu.
+
+Adresy linków są walidowane przez AnyHttpUrl; odrzucane są inne schematy i URL
+z loginem/hasłem. Nieprawidłowy adres nie ukrywa zachowanej treści dokumentu.
+Tekst jest escapowany. Linki mają noopener/noreferrer, frontend nie wykonuje
+żądań do źródeł. UI objaśnia lokalny korpus i heurystyczną pewność modelu.
+Ekran działa SSR, bez JavaScript; ręczne odświeżanie nie uruchamia researchu.
+
+Walidacja: 121 testów, Ruff, format-check i diff-check. Testy obejmują
+cytowania, escapowanie, niebezpieczne URL, brak scenariusza, pusty korpus,
+awarie odczytu bez fałszywego stanu pustego, niezgodne video_id, STORY i auth.
+Smoke z rzeczywistym backendem HTTP: izolowany SQLite, eager, mock LLM i jawny
+fikcyjny korpus z fixture TOP5. Powstały 2 dokumenty, 6 faktów i 5 cytowań;
+Chromium i WebKit (JS wyłączony) sprawdziły nawigację i treść dokumentu.
+Obejrzano screenshot mobilny, bez overflow 390 px. Nie testowano sieciowego
+research providera (nie jest zaimplementowany), workerów ani renderowania TOP5.
