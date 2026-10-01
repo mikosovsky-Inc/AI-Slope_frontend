@@ -9,6 +9,7 @@ from app.api.client import BackendError
 
 
 class User(BaseModel):
+    id: UUID | None = None
     email: str
     role: str
 

@@ -13,6 +13,7 @@ from app.config import ROOT, Settings, get_settings  # noqa: F401
 from app.pages.channels import router as channel_pages
 from app.pages.editorial import router as editorial_pages
 from app.pages.media import router as media_pages
+from app.pages.operations import router as operation_pages
 from app.pages.videos import router as video_pages
 
 SESSION = "ai_slop_session"
@@ -38,6 +39,7 @@ app.include_router(channel_pages)
 app.include_router(editorial_pages)
 app.include_router(video_pages)
 app.include_router(media_pages)
+app.include_router(operation_pages)
 
 
 def cookie(response, name, value, max_age=None):

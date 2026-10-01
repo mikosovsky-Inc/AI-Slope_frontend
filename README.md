@@ -152,3 +152,24 @@ uv run --no-active python tests/video_smoke.py \
 
 Wymaga FFmpeg/FFprobe i działającego workera. Tworzy testowy film STORY;
 sprawdza READY, odtwarzanie Chromium/WebKit i pobieranie zakresowe.
+
+## Etap 6 — koszty, zadania i rewizje
+
+- Kanał → **Koszty**: historia zdarzeń i rozliczenia; film → **Budżet**.
+- Film → zadanie: szczegóły, ponowienie i odzyskiwanie z historią operacji.
+  Porzucenie wymaga potwierdzenia. Backend sprawdza limity oraz dowody odzyskiwania.
+- Film → **Rewizje**: utworzenie szkicu, zapis scen, produkcja i anulowanie.
+  Zapisz każdą edytowaną scenę przed produkcją. TOP5 zachowuje narrację backendu.
+  Starsze wersje można pobrać. Postęp produkcji jest dostępny w szczegółach filmu;
+  listę rewizji odświeża się ręcznie.
+- Administrator → **Zadania**: filtry typu/statusu/filmu i paginacja.
+  Uprawnienia administratora nie nadają dostępu do odzyskiwania cudzych zadań.
+
+Smoke dla **izolowanego** backendu z mock providerami (tworzy dane testowe,
+wykonuje rendering i rewizję; pierwszy użytkownik musi być administratorem):
+
+```bash
+uv run --no-active python tests/operations_smoke.py \
+  --isolated-frontend-url http://127.0.0.1:13001 \
+  --isolated-backend-url http://127.0.0.1:18091
+```

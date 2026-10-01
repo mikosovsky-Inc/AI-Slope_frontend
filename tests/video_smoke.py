@@ -21,7 +21,7 @@ def wait_task(api, result):
     raise AssertionError("Preparation task timeout")
 
 
-def run(frontend, backend):
+def run(frontend, backend, verify=None):
     credentials = {
         "email": f"video-{uuid4().hex}@example.com",
         "password": "isolated-test-password",
@@ -117,6 +117,8 @@ def run(frontend, backend):
                 page.set_viewport_size({"width": 390, "height": 844})
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
                 page.screenshot(path=f"/tmp/ai-slop-video-{engine.name}.png", full_page=True)
+                if verify:
+                    verify(page, api, video_id, channel["id"], engine.name)
                 browser.close()
     print("PASS: real pipeline READY, Chromium/WebKit video playback, Range, mobile")
 

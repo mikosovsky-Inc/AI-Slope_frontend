@@ -47,7 +47,7 @@ wersji: aktualny test przeglądarkowy jest w repozytorium frontendu.
 3. [x] Onboarding kanału i setup/strategy, polling analizy.
 4. [x] Konkurenci i pomysły.
 5. [x] Filmy, sceny, produkcja i podgląd zasobów.
-6. [ ] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
+6. [x] Koszty, zadania, odzyskiwanie, dostępność i integracja całego workflow.
 
 Załączona specyfikacja odwołuje się do niewklejonej wcześniejszej części.
 Powyższa kolejność wynika z istniejącego kodu; nie przypisuje historycznych numerów
@@ -238,3 +238,39 @@ miał sceny krótsze od części mock narracji i został poprawnie zablokowany p
 renderer; zmieniono dane testowe, nie reguły backendu.
 
 Następny etap: szczegóły kosztów, obsługa zadań i odzyskiwanie/rewizje.
+
+## Etap 6 — koszty, zadania i rewizje (zakończony)
+
+Sprawdzono kontrakty panelu, admin/jobs, task recovery i revisions oraz ich
+ograniczenia w serwisach backendu. Dodano projekcje Pydantic i strony SSR:
+
+- koszty kanału (20 zdarzeń/stronę), szacunek vs rozliczenie, suma całej historii;
+- budżet filmu bez lokalnego przeliczania;
+- szczegóły zadania, retry, resume/use_asset/abandon i historia odzyskiwania;
+- administracyjna lista zadań z filtrami i licznikami przed filtrem statusu;
+- rewizje: szkic, edycja scen, produkcja, anulowanie, pobranie starszej wersji.
+
+Brak filtra statusu jobs oznacza aktywne i wymagające uwagi, zgodnie z API.
+Admin widzi metadane innych użytkowników; szczegóły i operacje są owner-scoped.
+JWT pozostaje w HttpOnly, wszystkie mutacje wymagają CSRF. Formularze działają
+bez JS. Potwierdzenia porzucenia/anulowania są sprawdzane także serwerowo.
+Narracja TOP5 nie trafia do PATCH nawet po manipulacji formularzem.
+Backend pozostaje odpowiedzialny za limity retry, walidację zasobów, wznowienie
+checkpointów, stan filmu i możliwość anulowania aktywnej produkcji.
+
+Zadania queued/running używają istniejącego pollingu. Rewizje mają ręczne
+odświeżenie i link do śledzenia produkcji filmu; brak automatycznego przeładowania
+chroni niezapisane formularze scen. Pole provider_job_id służy wyłącznie do
+oryginalnego identyfikatora zadania, nie sekretów. Nie pokazujemy surowych
+wyników zadań ani wewnętrznych dowodów providera.
+
+Walidacja: 92 testy, Ruff, format-check i diff-check. Mock HTTP obejmuje
+mapowanie retry i trzech metod odzyskiwania, CSRF, wymagane potwierdzenie,
+zachowanie błędnej edycji, narrację TOP5, obcą scenę, auth i rolę administratora.
+Smoke prawdziwego backendu z izolowanym SQLite/storage, mock providerami i FFmpeg:
+Chromium/WebKit, koszty, budżet, puste opcjonalne filtry jobs, szczegóły zadania;
+utworzenie rewizji, zmiana ruchu kamery, produkcja wersji 2 do ready,
+zachowanie wersji 1, anulowanie szkicu wersji 3. Odtwarzanie i Range nadal działają.
+Obejrzano screenshot mobilny WebKit; brak overflow przy 390 px.
+Odzyskiwanie niepewnych zadań sprawdzono przez mock HTTP, nie przez żywego
+płatnego providera. Smoke nie sprawdza Redis/Dramatiq ani PostgreSQL.
