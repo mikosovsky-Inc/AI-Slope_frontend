@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" href="/assets/icons/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/styles/main.css">
-  <script src="/assets/scripts/app.js" defer></script>
+  <script src="/assets/scripts/app.js?v=ssr-auth-3" defer></script>
 </head>
 <body>
   <header class="header">
@@ -39,35 +39,31 @@
       <div class="card">
         <div class="card-top"><span id="step-label">SYSTEM / START</span><span class="card-squares" aria-hidden="true">▪ ▪ ▪</span></div>
         <div class="card-content">
-          <div id="loading-view" role="status"><div class="pixel-key" aria-hidden="true">⌘</div><h2>Chwilka…</h2><p class="muted">Sprawdzamy, czy Twoje studio jest już gotowe.</p></div>
-          <div id="auth-view" hidden>
-            <div class="pixel-key" aria-hidden="true">↳</div>
-            <p class="eyebrow" id="form-kicker">TWÓJ NASTĘPNY KROK</p>
-            <h2 id="form-title">Witaj ponownie.</h2>
-            <p class="muted" id="form-description">Zaloguj się i wróć do swoich pomysłów.</p>
-            <div class="setup-note" id="setup-note" hidden><span aria-hidden="true">★</span><p>Nowe studio, czysta karta.<br>Pierwsze konto otrzyma rolę administratora.</p></div>
-            <form id="auth-form">
-              <fieldset id="form-fields">
-                <label for="email">ADRES E-MAIL <span>01</span></label>
-                <input id="email" name="email" type="email" autocomplete="username" placeholder="ty@twojestudio.pl" maxlength="254" required>
-                <label for="password">HASŁO <span>02</span></label>
-                <div class="password-input"><input id="password" name="password" type="password" autocomplete="current-password" maxlength="128" required aria-describedby="password-hint"><button id="toggle-password" type="button" aria-label="Pokaż hasło" aria-pressed="false">POKAŻ</button></div>
-                <p class="field-hint" id="password-hint">Twoje hasło do studia.</p>
-                <div id="confirm-field" hidden><label for="confirm-password">POWTÓRZ HASŁO <span>03</span></label><input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" maxlength="128" placeholder="Jeszcze raz, dla pewności"></div>
-                <button class="primary" id="submit-button" type="submit"><span id="submit-label">WEJDŹ DO STUDIA</span><span aria-hidden="true">↗</span></button>
-              </fieldset>
-            </form>
-            <p id="switch-line" class="switch-line"><span id="switch-copy">Nie masz jeszcze konta?</span> <a id="switch-link" href="/register">Załóż konto ↗</a></p>
-          </div>
-          <div id="account-view" hidden>
-            <div class="pixel-key" aria-hidden="true">✓</div><p class="eyebrow">POŁĄCZENIE NAWIĄZANE</p><h2>Jesteś w studiu.</h2><p class="muted">Twoje konto jest gotowe. Tutaj zaczyna się następny pomysł.</p>
-            <dl class="account-data"><dt>E-MAIL</dt><dd id="account-email"></dd><dt>ROLA W STUDIU</dt><dd><span id="account-role" class="role-badge"></span></dd></dl>
-            <p class="coming-soon">[ W PRZYGOTOWANIU ]<br>Generator filmów i zarządzanie kanałami pojawią się tutaj w kolejnym etapie.</p>
-            <button class="primary secondary" id="logout-button" type="button">WYLOGUJ SIĘ <span aria-hidden="true">↗</span></button>
-          </div>
-          <p id="message" class="message" role="status" aria-live="polite" hidden></p>
-          <button id="retry-button" class="retry" type="button" hidden>SPRÓBUJ PONOWNIE ↻</button>
-          <noscript><p class="message">Włącz JavaScript w przeglądarce, aby zarejestrować konto lub się zalogować.</p></noscript>
+          <p id="form-message" class="message" role="alert" tabindex="-1" {% if not message %}hidden{% endif %}>{{ message }}</p>
+          {% if user %}
+          <h2>Jesteś w studiu.</h2>
+          <dl class="account-data"><dt>E-MAIL</dt><dd>{{ user.email }}</dd><dt>ROLA W STUDIU</dt><dd>{{ user.role }}</dd></dl>
+          <p class="coming-soon">Zarządzanie kanałami pojawi się w kolejnym etapie.</p>
+          <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="primary" type="submit">WYLOGUJ SIĘ</button></form>
+          {% elif mode == 'unavailable' %}
+          <h2>Nie możemy połączyć się ze studiem.</h2><a class="retry" href="/">SPRÓBUJ PONOWNIE ↻</a>
+          {% else %}
+          <h2>{{ 'Zacznij swoje studio.' if mode == 'register' else 'Witaj ponownie.' }}</h2>
+          {% if first %}<p class="setup-note">Pierwsze konto otrzyma rolę administratora.</p>{% endif %}
+          <form id="auth-form" method="post" action="/{{ mode }}">
+            <input type="hidden" name="csrf" value="{{ csrf }}">
+            <fieldset>
+              <label for="email">ADRES E-MAIL</label>
+              <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required>
+              <label for="password">HASŁO</label>
+              <div class="password-input"><input id="password" name="password" type="password" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" minlength="{{ 12 if mode == 'register' else 1 }}" maxlength="128" required aria-describedby="password-hint"><button id="toggle-password" type="button" aria-label="Pokaż hasło" aria-pressed="false" hidden>POKAŻ</button></div>
+              <p id="password-hint" class="field-hint">{{ '12–128 znaków.' if mode == 'register' else 'Twoje hasło do studia.' }}</p>
+              {% if mode == 'register' %}<label for="confirm-password">POWTÓRZ HASŁO</label><input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" maxlength="128" required>{% endif %}
+              <button class="primary" type="submit">{{ 'UTWÓRZ KONTO' if mode == 'register' else 'WEJDŹ DO STUDIA' }}</button>
+            </fieldset>
+          </form>
+          <p class="switch-line"><a href="{{ '/login' if mode == 'register' else '/register' }}">{{ 'Zaloguj się' if mode == 'register' else 'Załóż konto' }} ↗</a></p>
+          {% endif %}
         </div>
         <div class="card-bottom"><span aria-hidden="true">▣</span> TWOJE STUDIO ZACZYNA SIĘ TUTAJ.</div>
       </div>

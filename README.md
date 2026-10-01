@@ -1,84 +1,76 @@
 # AI-Slop frontend
 
-Samodzielny frontend HTML, CSS i plain JavaScript w pixelowym stylu,
-hostowany przez własny serwer FastAPI. Bez Node.js i budowania assetów.
-Nie importuje backendu i nie łączy się bezpośrednio z bazą danych.
+Osobna aplikacja FastAPI + Jinja2, HTML, CSS i plain JavaScript w pixelowym stylu.
+Przeglądarka komunikuje się wyłącznie z frontendem. `BackendClient` wywołuje API
+backendu po HTTP. Brak importów backendu, połączenia z bazą i kopii logiki domenowej.
 
 ## Uruchomienie
 
-W katalogu `AI-Slop_frontend`:
-
 ```sh
-env -u VIRTUAL_ENV UV_PROJECT_ENVIRONMENT=.venv uv sync
+uv sync --no-active
 cp .env.example .env
-./run.sh
+uv run --no-active uvicorn main:app --reload --port 3000
 ```
 
-Otwórz http://localhost:3000/.
-`run.sh` zawsze wskazuje `.venv` tego projektu i usuwa odziedziczone `VIRTUAL_ENV`
-tylko dla uruchamianego procesu. Skrypt uruchamiaj bezpośrednio jako `./run.sh`,
-nie przez zewnętrzne `uv run ./run.sh`. Działa również z aktywnym środowiskiem backendu
-oraz po wywołaniu skryptu z innego katalogu. Dodatkowe argumenty przekazuje do
-Uvicorn, np. `./run.sh --port 3001`.
+Otwórz http://localhost:3000. `API_BASE_URL` to adres backendu dostępny **z serwera
+frontendu**, domyślnie http://localhost:8000. W sieci Compose może to być
+http://api:8000. Przeglądarka nie potrzebuje dostępu do tego adresu ani CORS.
+Przy HTTPS ustaw `COOKIE_SECURE=true`. Frontend nie potrzebuje sekretu JWT.
 
-Przy ręcznym uruchamianiu możesz najpierw wykonać `deactivate` w terminalu
-z aktywnym środowiskiem backendu. Ostrzeżenie uv o niedopasowanym `VIRTUAL_ENV`
-oznaczało, że ignorował to środowisko i wybierał projektowe `.venv`.
-Nie używaj `--active`, jeśli aktywne jest środowisko innego projektu.
-[Zasady wyboru środowiska uv](https://docs.astral.sh/uv/concepts/projects/config/#project-environment-path).
+## Etap 1 — fundament SSR i uwierzytelnianie
 
-W osobnym terminalu uruchom skonfigurowany backend:
+Zakończony: formularze Jinja2, BackendClient, rejestracja, logowanie, odczyt konta,
+wylogowanie, błędy API i niedostępność serwera. Działają bez JavaScript; JS dodaje
+przełączanie widoczności hasła i usuwa token pozostały po poprzedniej wersji.
 
-```sh
-# W katalogu AI-Slop_backend
-uv run uvicorn main:app --reload --port 8000
-```
-
-`API_BASE_URL` w `.env` frontendu wskazuje publiczny adres backendu, domyślnie
-`http://localhost:8000`. Backend wymaga ustawienia `CORS_ALLOWED_ORIGINS`
-na adres frontendu, np. `["http://localhost:3000"]`.
-Konfiguracja `/config` udostępnia przeglądarce wyłącznie publiczny adres API.
-Frontend nie potrzebuje sekretu JWT ani danych dostępowych do PostgreSQL.
-Repozytoria mogą znajdować się na różnych serwerach lub w dowolnych katalogach.
-
-## Zachowanie
-
-- Pusta baza: rejestracja pierwszego administratora.
-- Istniejące konto: logowanie, z możliwością rejestracji kolejnego użytkownika.
-- Po rejestracji przejście do logowania; po logowaniu e-mail, rola i wylogowanie.
-- Ważny JWT w `sessionStorage` karty przywraca sesję po odświeżeniu.
-- Niedostępność API pokazuje błąd i przycisk ponowienia.
-
-Wylogowanie usuwa token z przeglądarki; backend nie unieważnia jeszcze JWT.
+Pusta baza wyświetla rejestrację. Istniejące konta — logowanie. O roli pierwszego
+administratora decyduje backend. JWT jest w ciasteczku HttpOnly/SameSite=Lax,
+z czasem życia otrzymanym od backendu. Każdy odczyt konta weryfikuje sesję przez
+`/api/v1/auth/me`. Formularze POST wymagają tokenu CSRF. Odpowiedzi nie są cache’owane.
+Wylogowanie usuwa ciasteczko; backend nie unieważnia wystawionego JWT.
+Nie ma magazynu sesji w pamięci procesu ani wymogu wspólnego procesu z backendem.
 
 ## Testy
 
 ```sh
-uv run pytest
-uv run ruff check .
+uv run --no-active pytest
+uv run --no-active ruff check .
+uv run --no-active ruff format --check .
 ```
 
-Testy frontendu nie wymagają backendu ani bazy. Opcjonalny test obu aplikacji
-w Chromium znajduje się w backendzie: `tests/browser_smoke.py`.
-
-
-### Uruchamianie bez skryptu
-
-Z katalogu `AI-Slop_frontend`:
+Testy jednostkowe używają `httpx.MockTransport`; nie wymagają providerów ani bazy.
+Test przeglądarkowy tworzy dwa konta, więc uruchamiaj go **wyłącznie przeciwko
+izolowanemu, pustemu backendowi testowemu**, z mock providerami. Frontend musi
+wskazywać ten backend przez `API_BASE_URL`:
 
 ```sh
-uv run --no-active uvicorn main:app --reload --port 3000
+uv run --no-active playwright install chromium
+uv run --no-active python tests/browser_smoke.py --isolated-frontend-url http://localhost:3000
 ```
 
-`--no-active` jawnie wybiera środowisko projektu i usuwa ostrzeżenie o aktywnym
-środowisku innego projektu. Sprawdzisz użyty interpreter poleceniem:
+Sprawdza role admin/user, rejestrację, logowanie, odświeżenie, wylogowanie,
+JS włączony/wyłączony i szerokość mobilną. Zrzuty zapisuje w `/tmp/ai-slop-ssr-*.png`.
+Stary `tests/browser_smoke.py` w backendzie dotyczy poprzedniego frontendu SPA.
+
+Plan i analiza: [docs/frontend-stages.md](docs/frontend-stages.md).
+Braki API: [docs/backend-requirements.md](docs/backend-requirements.md).
+
+
+## Etap 2 — Studio i Kanały
+
+Po zalogowaniu `/app` pokazuje liczniki, koszty całej historii, statusy i ostatnie
+filmy. `/channels` prezentuje kanały po 12 na stronę. Obie strony pobierają dane
+użytkownika z backendu; są dostępne bez JavaScript. Tworzenie i konfiguracja kanału
+należą do kolejnego etapu. Aktualnie nie ma przycisków do tych operacji.
+
+Dodatkowy test integracyjny tworzy 13 kanałów w **izolowanym** backendzie:
 
 ```sh
-uv run --no-active python -c "import sys; print(sys.executable)"
+uv run --no-active playwright install chromium webkit
+uv run --no-active python tests/panel_smoke.py \
+  --isolated-frontend-url http://localhost:13001 \
+  --isolated-backend-url http://localhost:18091
 ```
 
-Ścieżka powinna wskazywać `AI-Slop_frontend/.venv/bin/python`.
-Przy otwarciu folderu `AI-Slop_frontend` w VS Code można użyć zadania
-**Terminal → Run Task → Frontend: start**. Zadanie jawnie wybiera środowisko frontendu.
-Ustawienie domyślnego interpretera dotyczy nowych wyborów w edytorze;
-nie zmienia środowiska już otwartego terminala.
+Frontend testowy musi wskazywać ten sam backend. Test sprawdza paginację,
+dashboard, mobilny układ i wylogowanie w Chromium oraz WebKit (bez JavaScript).
